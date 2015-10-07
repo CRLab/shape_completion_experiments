@@ -1,11 +1,12 @@
-from keras.datasets import hdf5_reconstruction_dataset
+#from keras.datasets import hdf5_reconstruction_dataset
+from datasets import drill_reconstruction_dataset
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution3D, MaxPooling3D
 from keras.optimizers import SGD, Adadelta, Adagrad, RMSprop
 from keras.utils import np_utils, generic_utils
-from datasets.graspit_models_dataset import *
+#from datasets.graspit_models_dataset import *
 
 import visualization.visualize as viz
 import mcubes
@@ -15,7 +16,8 @@ patch_size = 24
 
 nb_train_batches = 10
 nb_test_batches = 4
-nb_epoch = 2000
+#nb_epoch = 2000
+nb_epoch = 20
 
 LOSS_FILE = __file__.split('.')[0] + '_loss.txt'
 ERROR_FILE = __file__.split('.')[0] + '_error.txt'
@@ -44,7 +46,6 @@ def train(model, dataset):
             print 'loss: ' + str(loss)
             with open(LOSS_FILE, "a") as loss_file:
                 loss_file.write(str(loss) + '\n')
-
 
         test_iterator = dataset.iterator(batch_size=batch_size,
                                          num_batches=nb_train_batches,
@@ -171,8 +172,9 @@ def get_model():
 
 def get_dataset():
 
-    hdf5_filepath='/srv/3d_conv_data/drill_1000_random_24x24x24.h5'
-    dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
+    #hdf5_filepath='/srv/3d_conv_data/drill_1000_random_24x24x24.h5'
+    #dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
+    dataset = drill_reconstruction_dataset.DrillReconstructionDataset("/home/avinash/research/shape_completion/data/model_reconstruction_1000/models/", "/home/avinash/research/shape_completion/data/model_reconstruction_1000/pointclouds/")
     return dataset
 
 def get_graspit_dataset():
@@ -182,9 +184,9 @@ def get_graspit_dataset():
 if __name__ == "__main__":
     model = get_model()
     dataset = get_dataset()
-    #train(model, dataset)
-    #test(model, dataset)
-    test_real_world(model)
+    train(model, dataset)
+    #test(model, dataset, CURRENT_WEIGHT_FILE)
+    #test_real_world(model, CURRENT_WEIGHT_FILE)
     import IPython
     IPython.embed()
     assert False

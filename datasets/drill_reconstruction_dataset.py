@@ -7,7 +7,7 @@ import tf_conversions
 import PyKDL
 import math
 from reconstruction_dataset import map_pointclouds_to_camera_frame
-
+from operator import mul
 
 class DrillReconstructionDataset():
 
@@ -23,7 +23,7 @@ class DrillReconstructionDataset():
 
 
         self.models_dir = models_dir
-        self.pc_dir = pc_dir
+        self.pc_dir = pc_dir #os.path.expand_user(pc_dir)
         self.model_name = model_name
         self.patch_size = patch_size
         self.model_fullfilename = models_dir + model_name + ".binvox"
@@ -42,11 +42,13 @@ class DrillReconstructionDataset():
 
     def iterator(self,
                  batch_size=None,
-                 num_batches=None):
+                 num_batches=None,
+                 flatten_y=True):
 
         return DrillReconstructionIterator(self,
                                       batch_size=batch_size,
-                                      num_batches=num_batches)
+                                      num_batches=num_batches,
+                                      flatten_y=flatten_y)
 
 
 
@@ -96,12 +98,12 @@ def build_training_example(model_filepath, pose_filepath, single_view_pointcloud
     #we can just compute an occupancy grid centered around the origin.
     x = create_voxel_grid_around_point(pc2_out[0:3, :].T, center, voxel_resolution=.02, num_voxels_per_dim=patch_size)
     y = create_voxel_grid_around_point(non_zero_arr1.T[:, 0:3], center, voxel_resolution=.02, num_voxels_per_dim=patch_size)
-    # viz.visualize_3d(x)
-    # viz.visualize_3d(y)
-    # viz.visualize_pointcloud(pc2_out[0:3, :].T)
-    # viz.visualize_pointclouds(pc2_out.T, non_zero_arr1.T[:, 0:3], False, True)
-    # import IPython
-    # IPython.embed()
+    #viz.visualize_3d(x)
+    #viz.visualize_3d(y)
+    #viz.visualize_pointcloud(pc2_out[0:3, :].T)
+    #viz.visualize_pointclouds(pc2_out.T, non_zero_arr1.T[:, 0:3], False, True)
+    #import IPython
+    #IPython.embed()
     return x, y
 
 
@@ -138,12 +140,14 @@ class DrillReconstructionIterator(collections.Iterator):
                  dataset,
                  batch_size,
                  num_batches,
+                 flatten_y,
                  iterator_post_processors=[]):
 
 
         self.dataset = dataset
         self.batch_size = batch_size
         self.num_batches = num_batches
+        self.flatten_y = flatten_y
         self.iterator_post_processors = iterator_post_processors
 
 
@@ -174,6 +178,10 @@ class DrillReconstructionIterator(collections.Iterator):
         #make batch B2C01 rather than B012C
         batch_x = batch_x.transpose(0, 3, 4, 1, 2)
         batch_y = batch_y.transpose(0, 3, 4, 1, 2)
+
+        if self.flatten_y:
+            batch_y = batch_y.reshape(batch_y.shape[0], reduce(mul, batch_y.shape[1:]))
+
         #apply post processors to the patches
         for post_processor in self.iterator_post_processors:
             batch_x, batch_y = post_processor.apply(batch_x, batch_y)
@@ -191,3 +199,8 @@ class DrillReconstructionIterator(collections.Iterator):
 
     def num_examples(self):
         return self.dataset.get_num_examples()
+
+if __name__ == "__main__":
+	dataset = DrillReconstructionDataset("/home/avinash/research/shape_completion/data/model_reconstruction_1000/models/", "/home/avinash/research/shape_completion/data/model_reconstruction_1000/pointclouds/")
+        it = dataset.iterator(5)
+        it.next()
