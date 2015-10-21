@@ -12,8 +12,8 @@ from operator import mul
 class DrillReconstructionDataset():
 
     def __init__(self,
-                 models_dir="/srv/3d_conv_data/model_reconstruction_1000/models/",
-                 pc_dir="/srv/3d_conv_data/model_reconstruction_1000/pointclouds/",
+                 models_dir="/srv/data/shape_completion_data/model_reconstruction_1000/models/",
+                 pc_dir="/srv/data/shape_completion_data/model_reconstruction_1000/pointclouds/",
                  # models_dir="/srv/3d_conv_data/model_reconstruction_no_rot/models/",
                  # pc_dir="/srv/3d_conv_data/model_reconstruction_no_rot/pointclouds/",
                  # models_dir="/srv/3d_conv_data/model_reconstruction/models/",
@@ -49,7 +49,6 @@ class DrillReconstructionDataset():
                                       batch_size=batch_size,
                                       num_batches=num_batches,
                                       flatten_y=flatten_y)
-
 
 
 def build_training_example(model_filepath, pose_filepath, single_view_pointcloud_filepath, patch_size):
@@ -201,6 +200,6 @@ class DrillReconstructionIterator(collections.Iterator):
         return self.dataset.get_num_examples()
 
 if __name__ == "__main__":
-	dataset = DrillReconstructionDataset("/home/avinash/research/shape_completion/data/model_reconstruction_1000/models/", "/home/avinash/research/shape_completion/data/model_reconstruction_1000/pointclouds/")
+	dataset = DrillReconstructionDataset("/srv/data/shape_completion_data/model_reconstruction_1000/models/", "/srv/data/shape_completion_data/model_reconstruction_1000/pointclouds/")
         it = dataset.iterator(5)
         it.next()

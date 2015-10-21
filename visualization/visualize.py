@@ -22,6 +22,27 @@ def visualize_3d(data, title=None, save_file=None):
     else:
         fig.show()
 
+def visualize_multiple_3d(data0, data1, title=None, save_file=None):
+
+    data0[data0 < 0.5] = 0
+    data1[data1 < 0.5] = 0
+
+    non_zero_indices0 = np.array(data0.nonzero()) - 0.1
+    non_zero_indices1 = np.array(data1.nonzero())
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    Axes3D.scatter(ax, non_zero_indices0[0], non_zero_indices0[1], non_zero_indices0[2], c='b')
+    Axes3D.scatter(ax, non_zero_indices1[0], non_zero_indices1[1], non_zero_indices1[2], c='r')
+
+    if title is not None:
+        plt.title(title)
+
+    if save_file:
+        plt.savefig(save_file)
+    else:
+        fig.show()
+
 #pc of shape (num_points, 3)
 def visualize_pointcloud(pc, subsample=False):
 

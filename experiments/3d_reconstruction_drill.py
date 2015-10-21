@@ -174,7 +174,7 @@ def get_dataset():
 
     #hdf5_filepath='/srv/3d_conv_data/drill_1000_random_24x24x24.h5'
     #dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
-    dataset = drill_reconstruction_dataset.DrillReconstructionDataset("/home/avinash/research/shape_completion/data/model_reconstruction_1000/models/", "/home/avinash/research/shape_completion/data/model_reconstruction_1000/pointclouds/")
+    dataset = drill_reconstruction_dataset.DrillReconstructionDataset("/srv/data/shape_completion_data/model_reconstruction_1000/models/", "/srv/data/shape_completion_data/model_reconstruction_1000/pointclouds/")
     return dataset
 
 def get_graspit_dataset():
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     model = get_model()
     dataset = get_dataset()
     train(model, dataset)
-    #test(model, dataset, CURRENT_WEIGHT_FILE)
+    test(model, dataset, CURRENT_WEIGHT_FILE)
     #test_real_world(model, CURRENT_WEIGHT_FILE)
     import IPython
     IPython.embed()
