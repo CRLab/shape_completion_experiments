@@ -15,7 +15,7 @@ def create_voxel_grid_around_point(points, patch_center, voxel_resolution=0.001,
                            num_voxels_per_dim,
                            1))
 
-    centered_scaled_points = np.floor((points-patch_center + num_voxels_per_dim/2*voxel_resolution) / voxel_resolution)
+    centered_scaled_points = np.floor((points - patch_center + ((num_voxels_per_dim/2 - 1)*voxel_resolution)) / voxel_resolution)
 
     mask = centered_scaled_points.max(axis=1) < num_voxels_per_dim
     centered_scaled_points = centered_scaled_points[mask]

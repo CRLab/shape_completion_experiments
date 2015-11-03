@@ -1,5 +1,6 @@
 from datasets import ycb_reconstruction_dataset
 from datasets import hdf5_reconstruction_dataset
+from datasets import ycb_hdf5_reconstruction_dataset
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
@@ -44,7 +45,7 @@ def train(model, dataset):
                                           flatten_y=True)
 
         for b in range(nb_train_batches):
-            X_batch, Y_batch = train_iterator.next()
+            X_batch, Y_batch = train_iterator.next(train=1)
             loss = model.train(X_batch, Y_batch)
             print 'loss: ' + str(loss)
             with open(LOSS_FILE, "a") as loss_file:
@@ -56,7 +57,7 @@ def train(model, dataset):
 
         average_error = 0
         for b in range(nb_test_batches):
-            X_batch, Y_batch = test_iterator.next()
+            X_batch, Y_batch = test_iterator.next(train=0)
             error = model.test(X_batch, Y_batch)
             average_error += error
             print('error: ' + str(error))
@@ -90,7 +91,7 @@ def test(model, dataset, weights_filepath="weights_current.h5"):
                                           num_batches=nb_test_batches,
                                           flatten_y=False)
 
-    batch_x, batch_y = train_iterator.next()
+    batch_x, batch_y = train_iterator.next(train=0)
 
     results_dir = 'results'
     if not os.path.exists(results_dir):
@@ -154,7 +155,15 @@ def get_model():
 def get_dataset():
 
     #dataset = ycb_reconstruction_dataset.YcbDataset("/srv/data/shape_completion_data/ycb/", "rubbermaid_ice_guard_pitcher_blue", patch_size)
-    dataset = hdf5_reconstruction_dataset.ReconstructionDataset('/srv/data/shape_completion_data/ycb/wescott_orange_grey_scissors/h5/wescott_orange_grey_scissors.h5')
+    #dataset = hdf5_reconstruction_dataset.ReconstructionDataset('/srv/data/shape_completion_data/ycb/wescott_orange_grey_scissors/h5/wescott_orange_grey_scissors.h5')
+    model_names = ['black_and_decker_lithium_drill_driver', 'block_of_wood_6in', 'blue_wood_block_1inx1in',
+                   'brine_mini_soccer_ball', 'campbells_condensed_tomato_soup', 'cheerios_14oz',
+                    'clorox_disinfecting_wipes_35', 'comet_lemon_fresh_bleach', 'domino_sugar_1lb',
+                   'frenchs_classic_yellow_mustard_14oz', 'melissa_doug_farm_fresh_fruit_banana',
+                   'melissa_doug_farm_fresh_fruit_lemon', 'morton_salt_shaker', 'play_go_rainbow_stakin_cups_1_yellow',
+                   'play_go_rainbow_stakin_cups_2_orange', 'pringles_original', 'red_metal_cup_white_speckles',
+                   'rubbermaid_ice_guard_pitcher_blue', 'soft_scrub_2lb_4oz', 'sponge_with_textured_cover']
+    dataset = ycb_hdf5_reconstruction_dataset.YcbReconstructionDataset('/srv/data/shape_completion_data/ycb/', model_names)
     return dataset
 
 if __name__ == "__main__":

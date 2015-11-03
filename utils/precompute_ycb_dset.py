@@ -45,8 +45,8 @@ if __name__=='__main__':
     for model_name in model_names:
         data_dir = '/srv/data/shape_completion_data/ycb/'
         models_dir = data_dir + model_name + '/models/'
-        pc_dir = data_dir + model_name + '/pointclouds_yaw/'
-        h5_dir = data_dir + model_name + '/h5/'
+        pc_dir = data_dir + model_name + '/pointclouds_remesh/'
+        h5_dir = data_dir + model_name + '/h5_remesh/'
         os.mkdir(h5_dir)
 
         recon_dataset = YcbDataset(data_dir, model_name, patch_size=PATCH_SIZE)
