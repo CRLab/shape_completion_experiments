@@ -24,7 +24,7 @@ class YcbReconstructionDataset():
         self.train_set = []
         self.test_set = []
         for i, model_name in enumerate(model_names):
-            self.dset.append(h5py.File(models_dir+model_name+'/h5/'+model_name+'.h5', 'r'))
+            self.dset.append(h5py.File(models_dir+model_name+'/h5_remesh/'+model_name+'.h5', 'r'))
 
             self.num_examples.append(self.dset[i]['x'].shape[0])
             self.patch_size.append(self.dset[i]['x'].shape[1])
