@@ -7,6 +7,7 @@ import PyKDL
 from off_utils.off_handler import OffHandler
 import math
 
+import pcl
 
 def create_voxel_grid_around_point(points, patch_center, voxel_resolution=0.001, num_voxels_per_dim=72):
 
@@ -270,3 +271,40 @@ def build_training_example_scaled(binvox_file_path, model_pose_filepath, single_
     #IPython.embed()
 
     return x, y
+
+def build_test_example_scaled(single_view_pointcloud_filepath, patch_size, custom_scale=1, custom_offset=(0, 0, 0)):
+    custom_offset = np.array(custom_offset).reshape(3,1)
+
+    pc = np.asarray(pcl.load(single_view_pointcloud_filepath))
+    pc = pc[:, 0:3]
+
+    #min_x = pc[0, :].min()
+    #min_y = pc[1, :].min()
+    #min_z = pc[2, :].min()
+    #max_x = pc[0, :].max()
+    #max_y = pc[1, :].max()
+    #max_z = pc[2, :].max()
+
+    min_x = pc[:, 0].min()
+    min_y = pc[:, 1].min()
+    min_z = pc[:, 2].min()
+    max_x = pc[:, 0].max()
+    max_y = pc[:, 1].max()
+    max_z = pc[:, 2].max()
+
+    center = (min_x + (max_x-min_x)/2.0, min_y + (max_y-min_y)/2.0, min_z + (max_z-min_z)/2.0)
+
+    voxel_resolution = max((max_x - min_x), (max_y - min_y), (max_z - min_z)) / ((2.0/3.0) * patch_size)
+    print('Voxel Res = ' + str(voxel_resolution))
+
+    #now non_zero_arr and pc points are in the same frame of reference.
+    #since the images were captured with the model at the origin
+    #we can just compute an occupancy grid centered around the origin.
+    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size, pc_center_in_voxel_grid=(15.0, 15.0, 11.0))
+
+    #viz.visualize_3d(x)
+    #viz.visualize_pointcloud(pc[:, 0:3])
+    #import IPython
+    #IPython.embed()
+
+    return x

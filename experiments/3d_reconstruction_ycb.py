@@ -135,7 +135,7 @@ def test(model, dataset, weights_filepath):
 
     for i in range(BATCH_SIZE):
         v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
-        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'drill_' + str(i) + '.dae', 'drill')
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'model_' + str(i) + '.dae', 'model')
         viz.visualize_batch_x(pred, i, str(i), TEST_OUTPUT_DIR + "pred_" + str(i))
         viz.visualize_batch_x(batch_x, i, str(i), TEST_OUTPUT_DIR + "input_" + str(i))
         viz.visualize_batch_x(batch_y, i, str(i), TEST_OUTPUT_DIR + "expected_" + str(i))
