@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from datasets import ycb_reconstruction_dataset
 from datasets import hdf5_reconstruction_dataset
 from datasets import ycb_hdf5_reconstruction_dataset
@@ -45,10 +48,10 @@ def train(model, dataset):
     :return: void
     """
 
-    with open(LOSS_FILE, "w") as loss_file:
+    with open(LOSS_FILE, "w"):
         print("logging loss")
 
-    with open(ERROR_FILE, "w") as error_file:
+    with open(ERROR_FILE, "w"):
         print("logging error")
 
     lowest_error = 1000000
@@ -123,13 +126,27 @@ def test(model, dataset, weights_filepath):
         os.mkdir(RESULTS_DIR)
 
     pred = model._predict(batch_x)
+    # Prediction comes in format [batch number, z-axis, patch number, x-axis, y-axis].
     pred = pred.reshape(BATCH_SIZE, PATCH_SIZE, 1, PATCH_SIZE, PATCH_SIZE)
-
+    # Convert prediction to format [batch number, x-axis, y-axis, z-axis, patch number].
     pred_as_b012c = pred.transpose(0, 3, 4, 1, 2)
 
     for i in range(BATCH_SIZE):
+        # The Marching Cubes algorithm [Lorensen and Cline, 1987] in this case will take a 3d occupancy grid with
+        # floating point values in the range [0.0, 1.0] and create a mesh at the places where the occupancy value
+        # changes from less than to greater than 0.5.
+        # A 2D example is shown below for clarity, where each number represents an occupancy value and the lines
+        # represent the boundary where the mesh will approximately go. Note that the mesh will not necessarily be
+        # axis-aligned.
+        # 0.0 0.2|0.7 0.6 0.8 1.0
+        # 0.0 0.2|---|0.6 0.8 1.0
+        # 0.0 0.2 0.4|0.6 0.8 1.0
+        # 0.0 0.3 0.4|0.6 1.0 1.0
         v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
+        # Save predicted object mesh.
         mcubes.export_mesh(v, t, RESULTS_DIR + '/drill_' + str(i) + '.dae', 'drill')
+
+        # Save visualizations of the predicted, input, and expected occupancy grids.
         viz.visualize_batch_x(pred, i, str(i), RESULTS_DIR + "/pred_" + str(i))
         viz.visualize_batch_x(batch_x, i, str(i), RESULTS_DIR + "/input_" + str(i))
         viz.visualize_batch_x(batch_y, i, str(i), RESULTS_DIR + "/expected_" + str(i))
@@ -143,47 +160,80 @@ def get_model():
     :return: a compiled Theano model
     """
 
+    # ============
+    # The network:
+    # ============
+    # input size: 1 x [30,30,30]
+    # [conv 5^3 "valid"]
+    # size now: 64 x [26,26,26]
+    # [maxpool 2^3] + [dropout 0.5]
+    # size now: 64 x [13,13,13]
+    # [conv 4^3 "valid"]
+    # size now: 64 x [10,10,10]
+    # [maxpool 2^3] + [dropout 0.5]
+    # size now: 64 x [5,5,5]
+    # [conv 3^3 "valid"]
+    # size now: 64 x [3,3,3]
+    # [flatten]
+    # size now: [64*3*3*3] = [1728]
+    # [fully connected]
+    # size now: [3000]
+    # [fully connected]
+    # size now: [4000]
+    # [fully connected] + [sigmoid activation]
+    # output size: [PATCH_SIZE^3] = [30^3] = [9000]
+
     model = Sequential()
 
     filter_size = 5
     nb_filter_in = 1
     nb_filter_out = 64
-    # 30-5+1 = 26
+
+    # input: 1 cube of side length 30
+    # output: 64 cubes of side length 30-5+1 = 26
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
+    # output: 64 cubes of side length 26/2 = 13
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
-    # out 13
 
     filter_size = 4
     nb_filter_in = nb_filter_out
     nb_filter_out = 64
-    # 13-4+1 = 10
+
+    # output: 64 cubes of side length 13-4+1 = 10
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
+    # output: 64 cubes of size length 10/2 = 5
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
+    # During training: drop (set to zero) each of the current outputs with a 0.5 probability.
+    # During testing: multiply each of the current outputs by that probability.
     model.add(Dropout(.5))
-    # out 5
 
     filter_size = 3
     nb_filter_in = nb_filter_out
     nb_filter_out = 64
-    # 5-3+1 = 3
+
+    # output: 64 cubes of side length 5-3+1 = 3
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
+    # During training: drop (set to zero) each of the current outputs with a 0.5 probability.
+    # During testing: multiply each of the current outputs by that probability.
     model.add(Dropout(.5))
-    # out 3
 
     dim = 3
-    # model.add(Flatten(nb_filter_out*dim*dim*dim))
+
+    # output: a vector of size 64*3*3*3 = 1728
     model.add(Flatten())
+    # output: a vector of size 3000
     model.add(Dense(nb_filter_out * dim * dim * dim, 3000, init='normal'))
+    # output: a vector of size 4000
     model.add(Dense(3000, 4000, init='normal'))
+    # output: a vector of size PATCH_SIZE*PATCH_SIZE*PATCH_SIZE
     model.add(Dense(4000, PATCH_SIZE * PATCH_SIZE * PATCH_SIZE, init='normal', activation='sigmoid'))
 
-    # let's train the model using SGD + momentum (how original).
-    sgd = RMSprop()
-    model.compile(loss='cross_entropy_error', optimizer=sgd)
+    optimizer = RMSprop()
+    model.compile(loss='cross_entropy_error', optimizer=optimizer)
 
     return model
 
@@ -194,7 +244,7 @@ def get_dataset():
     """
 
     # dataset = ycb_reconstruction_dataset.YcbDataset("/srv/data/shape_completion_data/ycb/",
-    #   "rubbermaid_ice_guard_pitcher_blue", PATCH_SIZE)
+    # "rubbermaid_ice_guard_pitcher_blue", PATCH_SIZE)
     # dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
     #   '/srv/data/shape_completion_data/ycb/wescott_orange_grey_scissors/h5/wescott_orange_grey_scissors.h5')
     model_names = ['black_and_decker_lithium_drill_driver', 'block_of_wood_6in', 'blue_wood_block_1inx1in',
