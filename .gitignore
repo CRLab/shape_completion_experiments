@@ -1,0 +1,6 @@
+*.pyc
+*.h5
+*.txt
+*.*~
+results/*
+experiments/results/*

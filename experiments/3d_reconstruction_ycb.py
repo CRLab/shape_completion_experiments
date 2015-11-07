@@ -14,10 +14,12 @@ from keras.utils import np_utils, generic_utils
 import visualization.visualize as viz
 import mcubes
 import os
-
+import numpy as np
 import cProfile
 import pstats
 import StringIO
+import time
+import shutil
 
 PR = cProfile.Profile()
 
@@ -29,12 +31,16 @@ NB_TEST_BATCHES = 10
 # NB_EPOCH = 2000
 NB_EPOCH = 500
 
-RESULTS_DIR = 'results'
+RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
+TEST_OUTPUT_DIR = RESULTS_DIR + "test_output/"
+os.makedirs(TEST_OUTPUT_DIR)
 
-LOSS_FILE = __file__.split('.')[0] + '_loss.txt'
-ERROR_FILE = __file__.split('.')[0] + '_error.txt'
-CURRENT_WEIGHT_FILE = __file__.split('.')[0] + '_current_weights.h5'
-BEST_WEIGHT_FILE = __file__.split('.')[0] + '_best_weights.h5'
+LOSS_FILE = RESULTS_DIR + 'loss.txt'
+ERROR_FILE = RESULTS_DIR + 'error.txt'
+CURRENT_WEIGHT_FILE = RESULTS_DIR + 'current_weights.h5'
+BEST_WEIGHT_FILE = RESULTS_DIR + 'best_weights.h5'
+PROFILE_FILE = RESULTS_DIR + 'profile.txt'
+RUN_SCRIPT = __file__
 
 
 def train(model, dataset):
@@ -53,6 +59,9 @@ def train(model, dataset):
 
     with open(ERROR_FILE, "w"):
         print("logging error")
+
+    # save this script so we can call load model to get this model again later.
+    shutil.copy2(__file__, RESULTS_DIR + __file__)
 
     lowest_error = 1000000
 
@@ -97,7 +106,7 @@ def train(model, dataset):
         ps = pstats.Stats(PR, stream=s).sort_stats(sortby)
         ps.print_stats()
         stats_str = s.getvalue()
-        f = open("profile.txt", 'w')
+        f = open(PROFILE_FILE, 'w')
         f.write(stats_str)
         f.close()
 
@@ -122,9 +131,6 @@ def test(model, dataset, weights_filepath):
 
     batch_x, batch_y = train_iterator.next(train=0)
 
-    if not os.path.exists(RESULTS_DIR):
-        os.mkdir(RESULTS_DIR)
-
     pred = model._predict(batch_x)
     # Prediction comes in format [batch number, z-axis, patch number, x-axis, y-axis].
     pred = pred.reshape(BATCH_SIZE, PATCH_SIZE, 1, PATCH_SIZE, PATCH_SIZE)
@@ -144,12 +150,12 @@ def test(model, dataset, weights_filepath):
         # 0.0 0.3 0.4|0.6 1.0 1.0
         v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
         # Save predicted object mesh.
-        mcubes.export_mesh(v, t, RESULTS_DIR + '/drill_' + str(i) + '.dae', 'drill')
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'model_' + str(i) + '.dae', 'model')
 
         # Save visualizations of the predicted, input, and expected occupancy grids.
-        viz.visualize_batch_x(pred, i, str(i), RESULTS_DIR + "/pred_" + str(i))
-        viz.visualize_batch_x(batch_x, i, str(i), RESULTS_DIR + "/input_" + str(i))
-        viz.visualize_batch_x(batch_y, i, str(i), RESULTS_DIR + "/expected_" + str(i))
+        viz.visualize_batch_x(pred, i, str(i), TEST_OUTPUT_DIR + "pred_" + str(i))
+        viz.visualize_batch_x(batch_x, i, str(i), TEST_OUTPUT_DIR + "input_" + str(i))
+        viz.visualize_batch_x(batch_y, i, str(i), TEST_OUTPUT_DIR + "expected_" + str(i))
 
 
 def get_model():
@@ -276,7 +282,6 @@ def main():
     import IPython
 
     IPython.embed()
-    assert False
 
 
 if __name__ == "__main__":
