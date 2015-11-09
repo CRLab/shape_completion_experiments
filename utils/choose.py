@@ -1,9 +1,8 @@
-
 import os
 
 
-#options: [(item_name, option)]
-#topic: are we choosing a model? a pipeline?..
+# options: [(item_name, option)]
+# topic: are we choosing a model? a pipeline?..
 def choose(options, topic):
 
     print
@@ -21,8 +20,8 @@ def choose(options, topic):
     return option
 
 
-#We often want to choose a model or a dataset
-#so generic method to choose a file or folder out of a directory
+# We often want to choose a model or a dataset
+# so generic method to choose a file or folder out of a directory
 def choose_from(directory):
 
     options = os.listdir(directory)
