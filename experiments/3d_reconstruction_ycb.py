@@ -4,17 +4,14 @@
 from datasets import ycb_reconstruction_dataset
 from datasets import hdf5_reconstruction_dataset
 from datasets import ycb_hdf5_reconstruction_dataset
-from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.core import Dense, Dropout, Flatten
 from keras.layers.convolutional import Convolution3D, MaxPooling3D
 from keras.optimizers import SGD, Adadelta, Adagrad, RMSprop
-from keras.utils import np_utils, generic_utils
 
 import visualization.visualize as viz
 import mcubes
 import os
-import numpy as np
 import cProfile
 import pstats
 import StringIO

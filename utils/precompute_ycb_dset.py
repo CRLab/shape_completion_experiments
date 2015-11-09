@@ -97,7 +97,7 @@ def main():
         index_queue = Queue()
         examples_queue = Queue(maxsize=100)
 
-        print("staring readers")
+        print("starting readers")
         num_readers = 6
 
         for i in range(num_readers):
@@ -109,11 +109,11 @@ def main():
         for i in range(num_examples):
             index_queue.put(i)
 
-        print("putting done statments on queue")
+        print("putting done statements on queue")
         for i in range(num_readers):
             index_queue.put('DONE')
 
-        print("staring to write examples to h5dset")
+        print("starting to write examples to h5dset")
         for i in range(num_examples):
 
             print("working on number: " + str(i))
