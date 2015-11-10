@@ -353,3 +353,17 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size, custo
     # IPython.embed()
 
     return x
+
+
+def get_free_occupied_occluded_voxel_grid(voxel_grid_free_occupied):
+    """
+    Takes a binary occupancy voxel grid for the surface of the object and returns a ternary occupancy voxel grid.
+    :param voxel_grid_free_occupied: a voxel grid that indicates whether a voxel is occupied by the visible surface
+    ("1") or not occupied by the visible surface ("0"). If you're seeing a box, the "1"s would represent the location
+    of the part of the box's surface that you can see, while the "0" would represent everything else.
+    :return: a voxel grid that indicates whether a voxel is visually occluded ("2"), occupied by the visible surface
+    ("1"), or visibly known to be unoccupied ("0").
+    """
+
+    # TODO(Joaquín): Implement this method.
+    raise NotImplementedError
