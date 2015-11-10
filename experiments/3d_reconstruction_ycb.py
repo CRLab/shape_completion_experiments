@@ -295,9 +295,13 @@ def get_dataset():
 
 
 def main():
+    print('Step 1/4 -- Compiling Model')
     model = get_model()
+    print('Step 2/4 -- Loading Dataset')
     dataset = get_dataset()
+    print('Step 3/4 -- Training Model')
     train(model, dataset)
+    print('Step 4/4 -- Testing Model')
     test(model, dataset, BEST_WEIGHT_FILE)
 
     print('Script Completed')
