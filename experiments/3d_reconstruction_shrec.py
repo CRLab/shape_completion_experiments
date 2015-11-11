@@ -171,7 +171,7 @@ def get_model():
     return model
 
 
-def main()
+def main():
     for NUM_OBJECTS in [1, 5, 10, 25, 50, 100]:
         DATA_DIR = 'reconstruction_results_novel_view_shrec/' + str(NUM_OBJECTS) + '/'
         if not os.path.exists(DATA_DIR):
