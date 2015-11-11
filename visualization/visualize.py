@@ -12,6 +12,10 @@ def visualize_3d(data, title=None, save_file=None):
     ax = fig.add_subplot(111, projection='3d')
     Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1], non_zero_indices[2])
 
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
     if title is not None:
         plt.title(title)
 
