@@ -1,10 +1,7 @@
-
 import argparse
 import sys
-
 import numpy as np
 import cPickle
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -15,8 +12,8 @@ def load_pkl_data(data_filepath):
 
 
 def gen_plots(x_data, y_actual, y_expected):
-    #import IPython
-    #IPython.embed()
+    # import IPython
+    # IPython.embed()
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     plt.title('x_data')
@@ -25,7 +22,8 @@ def gen_plots(x_data, y_actual, y_expected):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     plt.title('y_actual')
-    Axes3D.scatter(ax, np.round(y_actual+bias).nonzero()[0], np.round(y_actual+bias).nonzero()[1], np.round(y_actual+bias).nonzero()[2])
+    Axes3D.scatter(ax, np.round(y_actual + bias).nonzero()[0], np.round(y_actual + bias).nonzero()[1],
+                   np.round(y_actual + bias).nonzero()[2])
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -35,7 +33,7 @@ def gen_plots(x_data, y_actual, y_expected):
     plt.show()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('data_file', type=str, help='weight file to visualize')
     args = parser.parse_args(sys.argv[1:])
@@ -43,3 +41,7 @@ if __name__ == "__main__":
     x_data, y_actual, y_expected = load_pkl_data(args.data_file)
 
     gen_plots(x_data, y_actual, y_expected)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,4 +1,4 @@
-#from keras.datasets import hdf5_reconstruction_dataset
+# from keras.datasets import hdf5_reconstruction_dataset
 from datasets import drill_reconstruction_dataset
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
@@ -6,17 +6,18 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution3D, MaxPooling3D
 from keras.optimizers import SGD, Adadelta, Adagrad, RMSprop
 from keras.utils import np_utils, generic_utils
-#from datasets.graspit_models_dataset import *
+# from datasets.graspit_models_dataset import *
 
 import visualization.visualize as viz
 import mcubes
 import os
+
 batch_size = 16
 patch_size = 24
 
 nb_train_batches = 10
 nb_test_batches = 4
-#nb_epoch = 2000
+# nb_epoch = 2000
 nb_epoch = 20
 
 LOSS_FILE = __file__.split('.')[0] + '_loss.txt'
@@ -24,8 +25,8 @@ ERROR_FILE = __file__.split('.')[0] + '_error.txt'
 CURRENT_WEIGHT_FILE = __file__.split('.')[0] + '_current_weights.h5'
 BEST_WEIGHT_FILE = __file__.split('.')[0] + '_best_weights.h5'
 
-def train(model, dataset):
 
+def train(model, dataset):
     with open(LOSS_FILE, "w") as loss_file:
         print("logging loss")
 
@@ -71,12 +72,11 @@ def train(model, dataset):
 
 
 def test(model, dataset, weights_filepath="weights_current.h5"):
-
     model.load_weights(weights_filepath)
 
     train_iterator = dataset.iterator(batch_size=batch_size,
-                                          num_batches=nb_test_batches,
-                                          flatten_y=False)
+                                      num_batches=nb_test_batches,
+                                      flatten_y=False)
 
     batch_x, batch_y = train_iterator.next()
 
@@ -86,7 +86,6 @@ def test(model, dataset, weights_filepath="weights_current.h5"):
 
     pred = model._predict(batch_x)
     pred = pred.reshape(batch_size, patch_size, 1, patch_size, patch_size)
-
 
     pred_as_b012c = pred.transpose(0, 3, 4, 1, 2)
 
@@ -99,12 +98,11 @@ def test(model, dataset, weights_filepath="weights_current.h5"):
 
 
 def test_real_world(model, weights_filepath="weights_current.h5"):
-
     model.load_weights(weights_filepath)
 
     dataset = get_graspit_dataset()
     train_iterator = dataset.iterator(batch_size=batch_size,
-                                          num_batches=nb_test_batches)
+                                      num_batches=nb_test_batches)
 
     batch_x = train_iterator.next()
     import IPython
@@ -134,35 +132,38 @@ def get_model():
     filter_size = 5
     nb_filter_in = 1
     nb_filter_out = 64
-    #24-5+1 = 20
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+    # 24-5+1 = 20
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+                            nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
-    #out 10
+    # out 10
 
     filter_size = 3
     nb_filter_in = nb_filter_out
     nb_filter_out = 64
-    #10-3+1 = 8
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+    # 10-3+1 = 8
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+                            nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
-    #out 4
+    # out 4
 
     filter_size = 3
     nb_filter_in = nb_filter_out
     nb_filter_out = 64
-    #4-3+1 = 2
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+    # 4-3+1 = 2
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+                            nb_depth=filter_size, border_mode='valid'))
     model.add(Dropout(.5))
-    #out 2
+    # out 2
 
     dim = 2
-    #model.add(Flatten(nb_filter_out*dim*dim*dim))
+    # model.add(Flatten(nb_filter_out*dim*dim*dim))
     model.add(Flatten())
-    model.add(Dense(nb_filter_out*dim*dim*dim, 3000, init='normal'))
+    model.add(Dense(nb_filter_out * dim * dim * dim, 3000, init='normal'))
     model.add(Dense(3000, 4000, init='normal'))
-    model.add(Dense(4000, patch_size*patch_size*patch_size, init='normal', activation='sigmoid'))
+    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal', activation='sigmoid'))
 
     # let's train the model using SGD + momentum (how original).
     sgd = RMSprop()
@@ -170,34 +171,31 @@ def get_model():
 
     return model
 
-def get_dataset():
 
-    #hdf5_filepath='/srv/3d_conv_data/drill_1000_random_24x24x24.h5'
-    #dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
-    dataset = drill_reconstruction_dataset.DrillReconstructionDataset("/srv/data/shape_completion_data/model_reconstruction_1000/models/", "/srv/data/shape_completion_data/model_reconstruction_1000/pointclouds/")
+def get_dataset():
+    # hdf5_filepath='/srv/3d_conv_data/drill_1000_random_24x24x24.h5'
+    # dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
+    dataset = drill_reconstruction_dataset.DrillReconstructionDataset(
+        "/srv/data/shape_completion_data/model_reconstruction_1000/models/",
+        "/srv/data/shape_completion_data/model_reconstruction_1000/pointclouds/")
     return dataset
+
 
 def get_graspit_dataset():
     return GraspitDataset()
 
 
-if __name__ == "__main__":
+def main():
     model = get_model()
     dataset = get_dataset()
     train(model, dataset)
     test(model, dataset, CURRENT_WEIGHT_FILE)
-    #test_real_world(model, CURRENT_WEIGHT_FILE)
+    # test_real_world(model, CURRENT_WEIGHT_FILE)
     import IPython
+
     IPython.embed()
     assert False
 
 
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    main()

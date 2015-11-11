@@ -1,4 +1,3 @@
-
 import os
 
 # this is the root directory of the data folder
@@ -20,4 +19,3 @@ MODEL_DIR = HOME_PATH + 'models/'
 
 # this is the directory where we get the model yaml file and hyper parameters from.
 MODEL_TEMPLATE_DIR = HOME_PATH + 'model_templates/'
-

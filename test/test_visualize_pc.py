@@ -1,16 +1,11 @@
-
 import unittest
-
 import numpy as np
-
 from datasets import reconstruction_dataset
 from visualization import visualize
 
 
 class TestVisualizePC(unittest.TestCase):
-
     def test_viz(self):
-
         dataset = reconstruction_dataset.ReconstructionDataset()
 
         num_batches = 10
@@ -27,5 +22,4 @@ class TestVisualizePC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-
     unittest.main()

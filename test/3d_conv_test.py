@@ -1,4 +1,3 @@
-
 import unittest
 import numpy as np
 import theano
@@ -6,10 +5,9 @@ from theano.tensor.nnet.conv3d2d import *
 
 
 class Test3dConv(unittest.TestCase):
-
-    #simple case, filter is a 3,3,3 cube, all zeroes except in the 8 corners
-    #it has ones there.  So, when input is all ones, each one of these corners
-    #gets hit once, producing an output of 8
+    # simple case, filter is a 3,3,3 cube, all zeroes except in the 8 corners
+    # it has ones there.  So, when input is all ones, each one of these corners
+    # gets hit once, producing an output of 8
     def test_simple(self):
 
         n_input_channels = 1
@@ -20,7 +18,7 @@ class Test3dConv(unittest.TestCase):
 
         input_shape = (n_input_samples, input_z_dim, n_input_channels, input_x_dim, input_y_dim)
 
-        dtensor5 = theano.tensor.TensorType('float32', (0,)*5)
+        dtensor5 = theano.tensor.TensorType('float32', (0,) * 5)
         x = dtensor5()
 
         n_filter_in_channels = 1
@@ -52,7 +50,6 @@ class Test3dConv(unittest.TestCase):
         self.assertEqual(out[0, 0, 0, 0, 0], 8)
         self.assertEqual(out[1, 0, 0, 0, 0], 8)
 
-
     def test_scale_up(self):
 
         n_input_channels = 1
@@ -63,7 +60,7 @@ class Test3dConv(unittest.TestCase):
 
         input_shape = (n_input_samples, input_z_dim, n_input_channels, input_x_dim, input_y_dim)
 
-        dtensor5 = theano.tensor.TensorType('float32', (0,)*5)
+        dtensor5 = theano.tensor.TensorType('float32', (0,) * 5)
         x = dtensor5()
 
         n_filter_in_channels = 1

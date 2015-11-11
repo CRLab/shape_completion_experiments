@@ -1,4 +1,3 @@
-
 import unittest
 import numpy as np
 import theano
@@ -7,11 +6,7 @@ import os
 import binvox_rw
 
 
-
 class TestBadOccupancyFiles(unittest.TestCase):
-
-
-
     def test(self):
         models_dir = '/srv/3d_conv_data/ModelNet10'
 
@@ -29,13 +24,13 @@ class TestBadOccupancyFiles(unittest.TestCase):
                 if ".binvox" in file_name:
                     examples.append(models_dir + '/' + category + subdir + file_name)
 
-
         for example in examples:
             with open(example, 'rb') as f:
                 model = binvox_rw.read_as_3d_array(f).data
 
                 if model.max() == 0:
                     print example
+
 
 if __name__ == '__main__':
     unittest.main()

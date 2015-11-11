@@ -6,7 +6,6 @@ from keras.layers.convolutional import Convolution3D, MaxPooling3D
 from keras.optimizers import SGD, Adadelta, Adagrad
 from keras.utils import np_utils, generic_utils
 
-
 batch_size = 4
 patch_size = 32
 
@@ -21,23 +20,26 @@ nb_epoch = 200
 model = Sequential()
 filter_size = 3
 nb_filter = 64
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+                        border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 filter_size = 5
 nb_filter = 96
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+                        border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 filter_size = 5
 nb_filter = 32
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size, border_mode='valid'))
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+                        border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 model.add(Flatten())
 
 model.add(Dense(32, nb_classes, init='normal'))
-model.add(Dense(nb_filter*14*14*14, nb_classes, init='normal'))
+model.add(Dense(nb_filter * 14 * 14 * 14, nb_classes, init='normal'))
 model.add(Activation('softmax'))
 
 # let's train the model using SGD + momentum (how original).
@@ -67,11 +69,3 @@ for e in range(nb_epoch):
         X_batch, Y_batch = test_iterator.next()
         error = model.test(X_batch, Y_batch)
         print 'error: ' + str(error)
-
-
-
-
-
-
-
-

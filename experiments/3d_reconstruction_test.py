@@ -1,4 +1,3 @@
-
 from datasets import reconstruction_test_dataset
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
@@ -6,7 +5,6 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution3D, MaxPooling3D
 from keras.optimizers import SGD, Adadelta, Adagrad, RMSprop
 from keras.utils import np_utils, generic_utils
-
 import visualization.visualize as viz
 import mcubes
 import os
@@ -31,13 +29,14 @@ RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
 TEST_OUTPUT_DIR = RESULTS_DIR + "test_output/"
 os.makedirs(TEST_OUTPUT_DIR)
 
-LOSS_FILE = RESULTS_DIR +'loss.txt'
-ERROR_FILE = RESULTS_DIR +'error.txt'
+LOSS_FILE = RESULTS_DIR + 'loss.txt'
+ERROR_FILE = RESULTS_DIR + 'error.txt'
 CURRENT_WEIGHT_FILE = RESULTS_DIR + 'current_weights.h5'
-#BEST_WEIGHT_FILE = RESULTS_DIR + 'best_weights.h5'
+# BEST_WEIGHT_FILE = RESULTS_DIR + 'best_weights.h5'
 BEST_WEIGHT_FILE = 'best_weights.h5'
 PROFILE_FILE = RESULTS_DIR + 'profile.txt'
 RUN_SCRIPT = __file__
+
 
 def test(model, dataset, weights_filepath):
     """
