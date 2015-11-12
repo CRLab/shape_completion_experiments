@@ -10,7 +10,8 @@ def visualize_3d(data, title=None, save_file=None):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1], non_zero_indices[2])
+    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1],
+                   non_zero_indices[2])
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -34,8 +35,10 @@ def visualize_multiple_3d(data0, data1, title=None, save_file=None):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    Axes3D.scatter(ax, non_zero_indices0[0], non_zero_indices0[1], non_zero_indices0[2], c='b')
-    Axes3D.scatter(ax, non_zero_indices1[0], non_zero_indices1[1], non_zero_indices1[2], c='r')
+    Axes3D.scatter(ax, non_zero_indices0[0], non_zero_indices0[1],
+                   non_zero_indices0[2], c='b')
+    Axes3D.scatter(ax, non_zero_indices1[0], non_zero_indices1[1],
+                   non_zero_indices1[2], c='r')
 
     if title is not None:
         plt.title(title)

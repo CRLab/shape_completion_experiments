@@ -36,7 +36,8 @@ def gen_weight_patches(weights, save_filename=None):
     weights = weights / weights.max() * 255
 
     # this works, but blends the weights
-    # weights = scipy.ndimage.zoom(weights, [1, 15, 15, 1], order=3, mode='nearest')
+    # weights = scipy.ndimage.zoom(
+    #   weights, [1, 15, 15, 1], order=3, mode='nearest')
 
     out = np.zeros((s0 * s1 * s2, s3 * 10, s4 * 10, 1))
     for i in range(s0 * s1 * s2):
@@ -54,8 +55,11 @@ def gen_weight_patches(weights, save_filename=None):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('weight_file', type=str, help='weight file to visualize')
-    parser.add_argument('--save', type=str, help='save weights file rather than show it. ex: --save out.png',
+    parser.add_argument('weight_file', type=str,
+                        help='weight file to visualize')
+    parser.add_argument('--save', type=str,
+                        help='save weights file rather than show it.' +
+                             ' ex: --save out.png',
                         default=None)
     args = parser.parse_args(sys.argv[1:])
 

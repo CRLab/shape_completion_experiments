@@ -88,10 +88,14 @@ def test(model, dataset, weights_filepath=BEST_WEIGHT_FILE):
 
     # for i in range(batch_size):
     #     v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
-    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae', 'drill')
-    #     viz.visualize_batch_x(pred, i, str(i), results_dir + "/pred_" + str(i))
-    #     viz.visualize_batch_x(batch_x, i, str(i), results_dir + "/input_" + str(i))
-    #     viz.visualize_batch_x(batch_y, i, str(i), results_dir + "/expected_" + str(i))
+    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae',
+    #                        'drill')
+    #     viz.visualize_batch_x(pred, i, str(i),
+    #                           results_dir + "/pred_" + str(i))
+    #     viz.visualize_batch_x(batch_x, i, str(i),
+    #                           results_dir + "/input_" + str(i))
+    #     viz.visualize_batch_x(batch_y, i, str(i),
+    #                           results_dir + "/expected_" + str(i))
     for i in range(batch_size):
         viz.visualize_batch_x_y_overlay(batch_x, batch_y, pred, str(i))
         # viz.visualize_batch_x(pred, i, 'pred_' + str(i), )
@@ -125,10 +129,14 @@ def test_real_world(model, weights_filepath="weights_current.h5"):
     #
     # for i in range(batch_size):
     #     v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
-    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae', 'drill')
-    #     viz.visualize_batch_x(pred, i, str(i), results_dir + "/pred_" + str(i))
-    #     viz.visualize_batch_x(batch_x, i, str(i), results_dir + "/input_" + str(i))
-    #     viz.visualize_batch_x(batch_y, i, str(i), results_dir + "/expected_" + str(i))
+    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae',
+    #                        'drill')
+    #     viz.visualize_batch_x(pred, i, str(i),
+    #                           results_dir + "/pred_" + str(i))
+    #     viz.visualize_batch_x(batch_x, i, str(i),
+    #                           results_dir + "/input_" + str(i))
+    #     viz.visualize_batch_x(batch_y, i, str(i),
+    #                           results_dir + "/expected_" + str(i))
 
 
 def get_model():
@@ -138,7 +146,8 @@ def get_model():
     nb_filter_in = 1
     nb_filter_out = 96
     # 24-5+1 = 20
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -148,7 +157,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 10-3+1 = 8
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -158,7 +168,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 4-3+1 = 2
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(Dropout(.5))
     # out 2
@@ -168,7 +179,8 @@ def get_model():
     model.add(Flatten())
     model.add(Dense(nb_filter_out * dim * dim * dim, 3500, init='normal'))
     model.add(Dense(3500, 4000, init='normal'))
-    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal', activation='sigmoid'))
+    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal',
+                    activation='sigmoid'))
 
     # let's train the model using SGD + momentum (how original).
     sgd = RMSprop()
@@ -181,10 +193,12 @@ def main():
     model = get_model()
 
     hdf5_filepath = '/srv/3d_conv_data/monitor_24x24x24_25objects.h5'
-    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
+    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=hdf5_filepath)
 
     hdf5_filepath = '/srv/3d_conv_data/monitor_24x24x24_10objects.h5'
-    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=hdf5_filepath)
+    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=hdf5_filepath)
 
     # train(model, train_dataset, test_dataset)
     test(model, test_dataset)

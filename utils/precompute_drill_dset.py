@@ -1,5 +1,6 @@
 import h5py
-from datasets.drill_reconstruction_dataset import DrillReconstructionDataset, build_training_example
+from datasets.drill_reconstruction_dataset import DrillReconstructionDataset, \
+    build_training_example
 from multiprocessing import Pool
 from multiprocessing import Process, Queue
 
@@ -13,10 +14,17 @@ def read(index):
     model_filepath = drill_dataset.examples[index][2]
     # index_string = str(index)
 
-    # single_view_pointcloud_filepath = '/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/pointclouds/cordless_drill/_0_0_' + index_string + '_pc.npy'
-    # pose_filepath = '/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/pointclouds/cordless_drill/_0_0_' + index_string + '_pose.npy'
-    # model_filepath = '/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/models/cordless_drill.binvox'
-    x, y = build_training_example(model_filepath, pose_filepath, single_view_pointcloud_filepath, PATCH_SIZE)
+    # single_view_pointcloud_filepath = \
+    #   '/srv/3d_conv_data/gazebo_reconstructiondrill_yaw_only/' + \
+    #   'pointclouds/cordless_drill/_0_0_' + index_string + '_pc.npy'
+    # pose_filepath = \
+    #   '/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/' + \
+    #   'pointclouds/cordless_drill/_0_0_' + index_string + '_pose.npy'
+    # model_filepath = \
+    #   '/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/' + \
+    #   'models/cordless_drill.binvox'
+    x, y = build_training_example(model_filepath, pose_filepath,
+                                  single_view_pointcloud_filepath, PATCH_SIZE)
     return x, y
 
 
@@ -38,8 +46,10 @@ def reader(index_queue, examples_queue):
 
 def main():
     drill_dataset = DrillReconstructionDataset(
-        # models_dir="/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/models/",
-        # pc_dir="/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/pointclouds/",
+        # models_dir="/srv/3d_conv_data/" + \
+        #            "gazebo_reconstruction_drill_yaw_only/models/",
+        # pc_dir="/srv/3d_conv_data/gazebo_reconstruction_drill_yaw_only/" + \
+        #        "pointclouds/",
         models_dir="/srv/3d_conv_data/model_reconstruction_1000/models/",
         pc_dir="/srv/3d_conv_data/model_reconstruction_1000/pointclouds/",
         patch_size=PATCH_SIZE)
@@ -48,9 +58,11 @@ def main():
 
     h5_dset = h5py.File(OUT_FILE_PATH)
 
-    h5_dset.create_dataset('x', (num_examples, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1),
+    h5_dset.create_dataset('x', (
+    num_examples, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1),
                            chunks=(100, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1))
-    h5_dset.create_dataset('y', (num_examples, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1),
+    h5_dset.create_dataset('y', (
+    num_examples, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1),
                            chunks=(100, PATCH_SIZE, PATCH_SIZE, PATCH_SIZE, 1))
 
     h5_dset.close()

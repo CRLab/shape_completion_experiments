@@ -187,8 +187,8 @@ def build_training_example(binvox_file_path, model_pose_filepath,
     # standing up at the origin.
     # pc2_out, non_zero_arr1 = map_pointclouds_to_world(pc, non_zero_arr,
     #                                                   model_pose)
-    pc2_out, non_zero_arr1 = map_pointclouds_to_camera_frame(pc, non_zero_arr,
-                                                             model_pose)
+    pc2_out, non_zero_arr1 = map_pointclouds_to_camera_frame(
+        pc, non_zero_arr, model_pose)
 
     min_x = pc2_out[0, :].min()
     min_y = pc2_out[1, :].min()

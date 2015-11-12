@@ -17,5 +17,6 @@ OUTPUT_DATASET_DIR = HOME_PATH + 'data/output_data/'
 # this points to the locations of all the trained models
 MODEL_DIR = HOME_PATH + 'models/'
 
-# this is the directory where we get the model yaml file and hyper parameters from.
+# this is the directory where we get the model yaml file and hyper parameters
+# from.
 MODEL_TEMPLATE_DIR = HOME_PATH + 'model_templates/'

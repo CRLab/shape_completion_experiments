@@ -31,7 +31,8 @@ BEST_WEIGHT_FILE = None
 
 def numpy_jaccard_similarity(a, b):
     '''
-    Returns the number of pixels of the intersection of two voxel grids divided by the number of pixels in the union.
+    Returns the number of pixels of the intersection of two voxel grids divided
+    by the number of pixels in the union.
     The inputs are expected to be numpy 5D ndarrays in BZCXY format.
     '''
     return np.mean(np.sum(a * b, axis=1) / np.sum((a + b) - a * b, axis=1))
@@ -58,7 +59,8 @@ def train(model, train_dataset, test_dataset):
 
         for b in range(nb_train_batches):
             X_batch, Y_batch = train_iterator.next()
-            Y_batch = Y_batch.reshape(Y_batch.shape[0], reduce(mul, Y_batch.shape[1:]))
+            Y_batch = Y_batch.reshape(Y_batch.shape[0],
+                                      reduce(mul, Y_batch.shape[1:]))
             loss = model.train(X_batch, Y_batch)
             print 'loss: ' + str(loss)
             with open(LOSS_FILE, "a") as loss_file:
@@ -71,11 +73,13 @@ def train(model, train_dataset, test_dataset):
         average_error = 0
         for b in range(nb_test_batches):
             X_batch, Y_batch = test_iterator.next()
-            Y_batch = Y_batch.reshape(Y_batch.shape[0], reduce(mul, Y_batch.shape[1:]))
+            Y_batch = Y_batch.reshape(Y_batch.shape[0],
+                                      reduce(mul, Y_batch.shape[1:]))
             error = model.test(X_batch, Y_batch)
             prediction = model._predict(X_batch)
             binarized_prediction = np.array(prediction > 0.5, dtype=int)
-            jaccard_similarity = numpy_jaccard_similarity(Y_batch, binarized_prediction)
+            jaccard_similarity = numpy_jaccard_similarity(Y_batch,
+                                                          binarized_prediction)
             average_error += error
             print('error: ' + str(error))
             print('jaccard_similarity: ' + str(jaccard_similarity))
@@ -95,7 +99,8 @@ def train(model, train_dataset, test_dataset):
 
 
 def test(model, dataset, weights_filepath=BEST_WEIGHT_FILE):
-    abs_weights_filepath = '/home/jvarley/3d_conv/keras/examples/' + weights_filepath
+    abs_weights_filepath = '/home/jvarley/3d_conv/keras/examples/' + \
+                           weights_filepath
 
     model.load_weights(abs_weights_filepath)
 
@@ -116,13 +121,17 @@ def test(model, dataset, weights_filepath=BEST_WEIGHT_FILE):
 
     for i in range(batch_size):
         v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
-        mcubes.export_mesh(v, t, results_dir + '/toilet_' + str(i) + '.dae', 'drill')
+        mcubes.export_mesh(v, t, results_dir + '/toilet_' + str(i) + '.dae',
+                           'drill')
         viz.visualize_batch_x(pred, i, str(i), results_dir + "/pred_" + str(i))
-        viz.visualize_batch_x(batch_x, i, str(i), results_dir + "/input_" + str(i))
-        viz.visualize_batch_x(batch_y, i, str(i), results_dir + "/expected_" + str(i))
+        viz.visualize_batch_x(batch_x, i, str(i),
+                              results_dir + "/input_" + str(i))
+        viz.visualize_batch_x(batch_y, i, str(i),
+                              results_dir + "/expected_" + str(i))
 
     # for i in range(batch_size):
-    #     viz.visualize_batch_x_y_overlay(batch_x, batch_y, pred, i=i,  title=str(i))
+    #     viz.visualize_batch_x_y_overlay(
+    #       batch_x, batch_y, pred, i=i, title=str(i))
     #     viz.visualize_batch_x(pred, i, 'pred_' + str(i), )
     #     viz.visualize_batch_x(batch_x, i,'batch_x_' + str(i), )
     #     viz.visualize_batch_x(batch_y, i, 'batch_y_' + str(i), )
@@ -155,10 +164,14 @@ def test_real_world(model, weights_filepath=BEST_WEIGHT_FILE):
     #
     # for i in range(batch_size):
     #     v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
-    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae', 'drill')
-    #     viz.visualize_batch_x(pred, i, str(i), results_dir + "/pred_" + str(i))
-    #     viz.visualize_batch_x(batch_x, i, str(i), results_dir + "/input_" + str(i))
-    #     viz.visualize_batch_x(batch_y, i, str(i), results_dir + "/expected_" + str(i))
+    #     mcubes.export_mesh(v, t, results_dir + '/drill_' + str(i) + '.dae',
+    #                        'drill')
+    #     viz.visualize_batch_x(pred, i, str(i), results_dir + "/pred_" + \
+    #                           str(i))
+    #     viz.visualize_batch_x(batch_x, i, str(i), results_dir + "/input_" + \
+    #                           str(i))
+    #     viz.visualize_batch_x(batch_y, i, str(i), results_dir + \
+    #                           "/expected_" + str(i))
 
 
 def get_model():
@@ -168,7 +181,8 @@ def get_model():
     nb_filter_in = 1
     nb_filter_out = 96
     # 24-5+1 = 20
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -178,7 +192,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 10-3+1 = 8
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -188,7 +203,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 4-3+1 = 2
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(Dropout(.5))
     # out 2
@@ -196,9 +212,11 @@ def get_model():
     dim = 2
     # model.add(Flatten(nb_filter_out*dim*dim*dim))
     model.add(Flatten())
-    model.add(Dense(nb_filter_out * dim * dim * dim, 3500, init='normal', activation='relu'))
+    model.add(Dense(nb_filter_out * dim * dim * dim, 3500, init='normal',
+                    activation='relu'))
     model.add(Dense(3500, 4000, init='normal', activation='relu'))
-    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal', activation='sigmoid'))
+    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal',
+                    activation='sigmoid'))
 
     # let's train the model using SGD + momentum (how original).
     sgd = RMSprop()
@@ -219,13 +237,17 @@ def main():
     ERROR_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_error.txt'
     JACCARD_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_jaccard.txt'
 
-    CURRENT_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_current_weights.h5'
-    BEST_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_best_weights.h5'
+    CURRENT_WEIGHT_FILE = DATA_DIR + __file__.split('.')[
+        0] + '_relu_current_weights.h5'
+    BEST_WEIGHT_FILE = DATA_DIR + __file__.split('.')[
+        0] + '_relu_best_weights.h5'
 
     model = get_model()
 
-    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=H5_TRAIN_DATASET_FILE)
-    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=H5_TEST_DATASET_FILE)
+    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=H5_TRAIN_DATASET_FILE)
+    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=H5_TEST_DATASET_FILE)
 
     # train(model, train_dataset, test_dataset)
     test(model, test_dataset, BEST_WEIGHT_FILE)

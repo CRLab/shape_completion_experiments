@@ -24,7 +24,8 @@ filter_size = 5
 nb_filter_in = 1
 nb_filter_out = 64
 # 32-5+1 = 28
-model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                        nb_row=filter_size, nb_col=filter_size,
                         nb_depth=filter_size, border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 model.add(Dropout(.5))
@@ -33,7 +34,8 @@ filter_size = 3
 nb_filter_in = nb_filter_out
 nb_filter_out = 128
 # 14-3+1 = 12
-model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                        nb_row=filter_size, nb_col=filter_size,
                         nb_depth=filter_size, border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 model.add(Dropout(.5))
@@ -42,7 +44,8 @@ filter_size = 6
 nb_filter_in = nb_filter_out
 nb_filter_out = nb_classes
 # 6-6+1
-model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                        nb_row=filter_size, nb_col=filter_size,
                         nb_depth=filter_size, border_mode='valid'))
 model.add(Flatten())
 
@@ -55,7 +58,8 @@ model.add(Flatten())
 sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='cross_entropy_error', optimizer=sgd)
 
-hdf5_filepath = '/srv/3d_conv_data/training_data/contact_and_potential_grasps-3_23_15_34-3_23_16_35.h5'
+hdf5_filepath = '/srv/3d_conv_data/training_data/' +\
+                'contact_and_potential_grasps-3_23_15_34-3_23_16_35.h5'
 topo_view_key = 'rgbd'
 y_key = 'grasp_type'
 
@@ -96,7 +100,8 @@ def test(model):
 
 
     ouput_dim = 64 - 32
-    output = np.zeros((ouput_dim + 32, ouput_dim + 32, ouput_dim + 32, nb_classes))
+    output = np.zeros(
+        (ouput_dim + 32, ouput_dim + 32, ouput_dim + 32, nb_classes))
     for x in range(ouput_dim):
         print x
         for y in range(ouput_dim):

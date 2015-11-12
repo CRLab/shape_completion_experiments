@@ -35,15 +35,17 @@ class TestPointCloudDataset(unittest.TestCase):
 
 
     def test_grasp_visualizaton(self):
-        hdf5_filepath = '/srv/3d_conv_data/training_data/contact_and_potential_grasps-3_23_15_34-3_23_16_35.h5'
+        hdf5_filepath = '/srv/3d_conv_data/training_data/' + \
+                        'contact_and_potential_grasps-3_23_15_34-3_23_16_35.h5'
         topo_view_key = 'rgbd'
         y_key = 'grasp_type'
         patch_size = 32
 
-        dataset = point_cloud_hdf5_dataset.PointCloud_HDF5_Dataset(topo_view_key,
-                                                                   y_key,
-                                                                   hdf5_filepath,
-                                                                   patch_size)
+        dataset = point_cloud_hdf5_dataset.PointCloud_HDF5_Dataset(
+            topo_view_key,
+            y_key,
+            hdf5_filepath,
+            patch_size)
 
         num_batches = 10
         batch_size = 5

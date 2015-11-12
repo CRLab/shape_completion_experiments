@@ -13,7 +13,8 @@ def plot_stat(stat_file):
 
 def main():
     parser = argparse.ArgumentParser(description='Plot Loss and Error')
-    parser.add_argument('--stat_file', default="results/y15_m11_d05_h17_m26/error.txt",
+    parser.add_argument('--stat_file',
+                        default="results/y15_m11_d05_h17_m26/error.txt",
                         help='filepath of stat to plot')
 
     params = parser.parse_args()

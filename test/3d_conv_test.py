@@ -16,7 +16,9 @@ class Test3dConv(unittest.TestCase):
         input_y_dim = 3
         input_z_dim = 3
 
-        input_shape = (n_input_samples, input_z_dim, n_input_channels, input_x_dim, input_y_dim)
+        input_shape = (
+            n_input_samples, input_z_dim, n_input_channels, input_x_dim,
+            input_y_dim)
 
         dtensor5 = theano.tensor.TensorType('float32', (0,) * 5)
         x = dtensor5()
@@ -40,7 +42,8 @@ class Test3dConv(unittest.TestCase):
                 for k in [0, 2]:
                     filter[0, i, 0, j, k] = 1
 
-        conv_out = conv3d(x, filter, signals_shape=input_shape, filters_shape=filter_shape)
+        conv_out = conv3d(x, filter, signals_shape=input_shape,
+                          filters_shape=filter_shape)
         f = theano.function([x], [conv_out])
 
         out = f(np.ones(input_shape, dtype=np.float32))
@@ -58,7 +61,9 @@ class Test3dConv(unittest.TestCase):
         input_y_dim = 2
         input_z_dim = 4
 
-        input_shape = (n_input_samples, input_z_dim, n_input_channels, input_x_dim, input_y_dim)
+        input_shape = (
+            n_input_samples, input_z_dim, n_input_channels, input_x_dim,
+            input_y_dim)
 
         dtensor5 = theano.tensor.TensorType('float32', (0,) * 5)
         x = dtensor5()
@@ -77,11 +82,12 @@ class Test3dConv(unittest.TestCase):
                         )
 
         filter = np.zeros(filter_shape, dtype=np.float32)
-        ##### [b, z, c, x, y]
+        #     [b, z, c, x, y]
         filter[0, 0, 0, 1, 0] = 1
         filter[0, 2, 0, 1, 0] = 2
 
-        conv_out = conv3d(x, filter, signals_shape=input_shape, filters_shape=filter_shape)
+        conv_out = conv3d(x, filter, signals_shape=input_shape,
+                          filters_shape=filter_shape)
         f = theano.function([x], [conv_out])
 
         input = np.zeros(input_shape, dtype=np.float32)

@@ -21,7 +21,8 @@ def remesh_binvox_model(model_dir, model_name, results_dir):
                            num_voxels_per_dim + 2,
                            num_voxels_per_dim + 2))
 
-    voxel_grid[1:num_voxels_per_dim + 1, 1:num_voxels_per_dim + 1, 1:num_voxels_per_dim + 1] = points
+    voxel_grid[1:num_voxels_per_dim + 1, 1:num_voxels_per_dim + 1,
+    1:num_voxels_per_dim + 1] = points
 
     v, t = mcubes.marching_cubes(voxel_grid, 0.5)
     v = v * binvox_scale / num_voxels_per_dim + binvox_offset

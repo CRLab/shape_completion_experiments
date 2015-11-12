@@ -49,7 +49,8 @@ def train(train_dataset, test_dataset):
         Y_batch = Y_batch.reshape(Y_batch.shape[0], -1)
         # Use an "identity classifier" that just uses the input as the output
         binarized_prediction = np.array(X_batch > 0.5, dtype=int)
-        jaccard_similarity = numpy_jaccard_similarity(Y_batch, binarized_prediction)
+        jaccard_similarity = numpy_jaccard_similarity(Y_batch,
+                                                      binarized_prediction)
         print('jaccard_similarity: ' + str(jaccard_similarity))
         jaccards[b] = jaccard_similarity
     # from IPython import embed
@@ -110,7 +111,8 @@ def get_model():
     nb_filter_in = 1
     nb_filter_out = 96
     # 24-5+1 = 20
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -120,7 +122,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 10-3+1 = 8
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -130,7 +133,8 @@ def get_model():
     nb_filter_in = nb_filter_out
     nb_filter_out = 96
     # 4-3+1 = 2
-    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in, nb_row=filter_size, nb_col=filter_size,
+    model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
+                            nb_row=filter_size, nb_col=filter_size,
                             nb_depth=filter_size, border_mode='valid'))
     model.add(Dropout(.5))
     # out 2
@@ -138,9 +142,11 @@ def get_model():
     dim = 2
     # model.add(Flatten(nb_filter_out*dim*dim*dim))
     model.add(Flatten())
-    model.add(Dense(nb_filter_out * dim * dim * dim, 3500, init='normal', activation='relu'))
+    model.add(Dense(nb_filter_out * dim * dim * dim, 3500, init='normal',
+                    activation='relu'))
     model.add(Dense(3500, 4000, init='normal', activation='relu'))
-    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal', activation='sigmoid'))
+    model.add(Dense(4000, patch_size * patch_size * patch_size, init='normal',
+                    activation='sigmoid'))
 
     # let's train the model using SGD + momentum (how original).
     sgd = RMSprop()
@@ -164,14 +170,18 @@ def main():
     ERROR_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_error.txt'
     JACCARD_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_jaccard.txt'
 
-    CURRENT_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_current_weights.h5'
-    BEST_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + '_relu_best_weights.h5'
+    CURRENT_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + \
+                          '_relu_current_weights.h5'
+    BEST_WEIGHT_FILE = DATA_DIR + __file__.split('.')[0] + \
+                       '_relu_best_weights.h5'
     '''
 
     # model = get_model()
 
-    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=H5_TRAIN_DATASET_FILE)
-    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(hdf5_filepath=H5_TEST_DATASET_FILE)
+    train_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=H5_TRAIN_DATASET_FILE)
+    test_dataset = hdf5_reconstruction_dataset.ReconstructionDataset(
+        hdf5_filepath=H5_TEST_DATASET_FILE)
 
     print(test_dataset.get_num_examples());
 

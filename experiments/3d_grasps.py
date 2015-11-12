@@ -20,19 +20,22 @@ nb_epoch = 200
 model = Sequential()
 filter_size = 3
 nb_filter = 64
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size,
+                        nb_col=filter_size, nb_depth=filter_size,
                         border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 filter_size = 5
 nb_filter = 96
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size,
+                        nb_col=filter_size, nb_depth=filter_size,
                         border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
 filter_size = 5
 nb_filter = 32
-model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size, nb_col=filter_size, nb_depth=filter_size,
+model.add(Convolution3D(nb_filter=nb_filter, stack_size=1, nb_row=filter_size,
+                        nb_col=filter_size, nb_depth=filter_size,
                         border_mode='valid'))
 model.add(MaxPooling3D(pool_size=(2, 2, 2)))
 
@@ -46,9 +49,10 @@ model.add(Activation('softmax'))
 sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=sgd)
 
-dataset = geometric_3d_dataset.Geometric3DDataset(patch_size=patch_size,
-                                                  task=geometric_3d_dataset.Geometric3DDataset.CLASSIFICATION_TASK,
-                                                  centered=True)
+dataset = geometric_3d_dataset.Geometric3DDataset(
+    patch_size=patch_size,
+    task=geometric_3d_dataset.Geometric3DDataset.CLASSIFICATION_TASK,
+    centered=True)
 
 for e in range(nb_epoch):
 

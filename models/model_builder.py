@@ -1,13 +1,7 @@
-
-
-
 import numpy
-
 import theano
 import theano.tensor as T
-
 from theano.tensor.nnet.conv3d2d import *
-
 from layers.conv_layer_3d import *
 from layers.flatten_layer import *
 from layers.hidden_layer import *
@@ -15,14 +9,14 @@ from layers.layer_utils import *
 from layers.logistic_regression_layer import *
 from layers.max_pool_layer_3d import *
 from layers.recon_layer import *
-
 from collections import namedtuple
 
-Model = namedtuple('Model', ['train', 'test', 'validate', 'demonstrate', 'layers'], verbose=False)
+Model = namedtuple('Model',
+                   ['train', 'test', 'validate', 'demonstrate', 'layers'],
+                   verbose=False)
 
 
 class ModelBuilder():
-
     def __init__(self, input_shape, learning_rate=.1):
         self.learning_rate = learning_rate
 
@@ -35,7 +29,7 @@ class ModelBuilder():
     def add_conv_layer(self, filter_shape):
 
         if len(self.layers) == 0:
-            dtensor5 = theano.tensor.TensorType('float32', (0,)*5)
+            dtensor5 = theano.tensor.TensorType('float32', (0,) * 5)
             input = dtensor5()
             input_shape = self.input_shape
         else:
@@ -98,8 +92,7 @@ class ModelBuilder():
         layer = LogisticRegression(
             input=self.layers[-1].output,
             n_in=self.layers[-1].output_shape[-1],
-            n_out=n,rng=self.rng
-
+            n_out=n, rng=self.rng
 
         )
 
@@ -127,7 +120,7 @@ class ModelBuilder():
         )
 
         validate_model = theano.function(
-            [x,y],
+            [x, y],
             errors,
             givens={
 
@@ -153,7 +146,7 @@ class ModelBuilder():
         # create the updates list by automatically looping over all
         # (params[i], grads[i]) pairs.
 
-        #RMSprop
+        # RMSprop
         updates = []
         for p, g in zip(params, grads):
             MeanSquare = theano.shared(p.get_value() * 0.)
@@ -162,9 +155,8 @@ class ModelBuilder():
             updates.append((MeanSquare, nextMeanSquare))
             updates.append((p, p - self.learning_rate * g))
 
-
         train_model = theano.function(
-            [x,y],
+            [x, y],
             cost,
             updates=updates,
             givens={
@@ -185,4 +177,5 @@ if __name__ == "__main__":
     mb = ModelBuilder()
     m = mb.build_model()
     import IPython
+
     IPython.embed()
