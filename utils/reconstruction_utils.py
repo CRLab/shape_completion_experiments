@@ -402,6 +402,10 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
     return x
 
 
+def get_occluded_voxel_grid(binary_voxel_grid, method='simple'):
+    return get_ternary_voxel_grid(binary_voxel_grid, method) == 2
+
+
 def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     """
     Takes a binary occupancy voxel grid for the surface of the object and
@@ -416,6 +420,8 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     ("2"), occupied by the visible surface ("1"), or visibly known to be
     unoccupied ("0").
     """
+
+    assert len(binary_voxel_grid.shape) == 3
 
     voxel_grid_shape = binary_voxel_grid.shape
     # Initialize all ternary grid values to 0.
