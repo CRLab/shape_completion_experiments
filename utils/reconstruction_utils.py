@@ -418,8 +418,14 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     """
 
     voxel_grid_shape = binary_voxel_grid.shape
+    # Initialize all ternary grid values to 0.
     ternary_voxel_grid = np.zeros(voxel_grid_shape)
     if method is 'simple':
+        # The 'simple' method assumes that the camera is an infinite distance
+        # away from the object and thus considers as occluded every z value
+        # behind the surface for a fixed x and y. Perspective isn't taken into
+        # account.
+
         for i in range(voxel_grid_shape[0]):
             for j in range(voxel_grid_shape[1]):
                 for k in range(voxel_grid_shape[2]):
