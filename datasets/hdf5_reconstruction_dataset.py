@@ -1,23 +1,19 @@
-
 import numpy as np
 import os
 import collections
-
 import binvox_rw
 import visualization.visualize as viz
 import tf_conversions
 import PyKDL
 import h5py
 from operator import mul
-
-
 import math
 
+
 class ReconstructionDataset():
-
     def __init__(self,
-                 hdf5_filepath='/srv/3d_conv_data/22_model_big_bird_1000_rot_24x24x24.h5'):
-
+                 hdf5_filepath='/srv/3d_conv_data/' +
+                               '22_model_big_bird_1000_rot_24x24x24.h5'):
         self.dset = h5py.File(hdf5_filepath, 'r')
 
         self.num_examples = self.dset['x'].shape[0]
@@ -30,15 +26,13 @@ class ReconstructionDataset():
                  batch_size=None,
                  num_batches=None,
                  flatten_y=True):
-
-            return ReconstructionIterator(self,
-                                          batch_size=batch_size,
-                                          num_batches=num_batches,
-                                          flatten_y=flatten_y)
+        return ReconstructionIterator(self,
+                                      batch_size=batch_size,
+                                      num_batches=num_batches,
+                                      flatten_y=flatten_y)
 
 
 class ReconstructionIterator(collections.Iterator):
-
     def __init__(self,
                  dataset,
                  batch_size,
@@ -59,12 +53,19 @@ class ReconstructionIterator(collections.Iterator):
 
     def next(self):
 
-        batch_indices = np.random.random_integers(0, self.dataset.get_num_examples()-1, self.batch_size)
+        batch_indices = \
+            np.random.random_integers(0,
+                                      self.dataset.get_num_examples() - 1,
+                                      self.batch_size)
 
         patch_size = self.dataset.patch_size
 
-        batch_x = np.zeros((self.batch_size, patch_size, patch_size, patch_size, 1), dtype=np.float32)
-        batch_y = np.zeros((self.batch_size, patch_size, patch_size, patch_size, 1), dtype=np.float32)
+        batch_x = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
+        batch_y = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
 
         for i in range(len(batch_indices)):
             index = batch_indices[i]
@@ -79,14 +80,15 @@ class ReconstructionIterator(collections.Iterator):
             batch_y[i, :, :, :, :] = y
             batch_x[i, :, :, :, :] = x
 
-        #make batch B2C01 rather than B012C
+        # make batch B2C01 rather than B012C
         batch_x = batch_x.transpose(0, 3, 4, 1, 2)
         batch_y = batch_y.transpose(0, 3, 4, 1, 2)
 
         if self.flatten_y:
-            batch_y = batch_y.reshape(batch_y.shape[0], reduce(mul, batch_y.shape[1:]))
+            batch_y = batch_y.reshape(batch_y.shape[0],
+                                      reduce(mul, batch_y.shape[1:]))
 
-        #apply post processors to the patches
+        # apply post processors to the patches
         for post_processor in self.iterator_post_processors:
             batch_x, batch_y = post_processor.apply(batch_x, batch_y)
 
@@ -100,4 +102,3 @@ class ReconstructionIterator(collections.Iterator):
 
     def num_examples(self):
         return self.dataset.get_num_examples()
-

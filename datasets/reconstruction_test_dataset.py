@@ -2,22 +2,21 @@ import numpy as np
 import os
 import collections
 from operator import mul
-
 import visualization.visualize as viz
-
 from utils.reconstruction_utils import build_test_example_scaled
 
-class TestDataset():
 
+class TestDataset():
     def __init__(self,
                  data_dir,
                  model_name,
                  patch_size):
 
-        self.pc_dir = data_dir #+ '/' + model_name + '/pointclouds/'
-        #self.model_name = model_name
+        self.pc_dir = data_dir  # + '/' + model_name + '/pointclouds/'
+        # self.model_name = model_name
         self.patch_size = patch_size
-        filenames = [d for d in os.listdir(self.pc_dir) if not os.path.isdir(self.pc_dir + d)]
+        filenames = [d for d in os.listdir(self.pc_dir) if
+                     not os.path.isdir(self.pc_dir + d)]
 
         self.examples = []
         for file_name in filenames:
@@ -29,22 +28,19 @@ class TestDataset():
         return len(self.examples)
 
     def iterator(self,
-                 batch_size = None,
-                 num_batches = None):
+                 batch_size=None,
+                 num_batches=None):
         return TestDatasetIterator(self,
-                                  batch_size = batch_size,
-                                  num_batches = num_batches)
+                                   batch_size=batch_size,
+                                   num_batches=num_batches)
 
 
 class TestDatasetIterator(collections.Iterator):
-
     def __init__(self,
                  dataset,
                  batch_size,
                  num_batches,
                  iterator_post_processors=[]):
-
-
         self.dataset = dataset
         self.batch_size = batch_size
         self.num_batches = num_batches
@@ -54,27 +50,31 @@ class TestDatasetIterator(collections.Iterator):
         return self
 
     def next(self):
-
-        batch_indices = np.random.random_integers(0, self.dataset.get_num_examples() - 1, self.batch_size)
+        batch_indices = \
+            np.random.random_integers(0,
+                                      self.dataset.get_num_examples() - 1,
+                                      self.batch_size)
         patch_size = self.dataset.patch_size
-        batch_x = np.zeros((self.batch_size, patch_size, patch_size, patch_size, 1), dtype=np.float32)
+        batch_x = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
 
         for i in range(len(batch_indices)):
             index = batch_indices[i]
             single_view_pointcloud_filepath = self.dataset.examples[index]
 
-            x = build_test_example_scaled(single_view_pointcloud_filepath, patch_size)
+            x = build_test_example_scaled(single_view_pointcloud_filepath,
+                                          patch_size)
 
             ############################
 
             batch_x[i, :, :, :, :] = x
 
-        #make batch B2C01 rather than B012C
+        # make batch B2C01 rather than B012C
         batch_x = batch_x.transpose(0, 3, 4, 1, 2)
 
-
-        #apply post processors to the patches
-        #for post_processor in self.iterator_post_processors:
+        # apply post processors to the patches
+        # for post_processor in self.iterator_post_processors:
         #    batch_x, batch_y = post_processor.apply(batch_x, batch_y)
 
         return batch_x
@@ -87,6 +87,7 @@ class TestDatasetIterator(collections.Iterator):
 
     def num_examples(self):
         return self.dataset.get_num_examples()
+
 
 if __name__ == "__main__":
     dataset = TestDataset("/srv/data/shape_completion_data/test/", "", 30)

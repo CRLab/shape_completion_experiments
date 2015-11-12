@@ -4,7 +4,7 @@ import h5py
 from operator import mul
 
 
-class YcbReconstructionDataset():
+class YcbReconstructionDataset:
     def __init__(self,
                  models_dir,
                  model_names):
@@ -14,13 +14,19 @@ class YcbReconstructionDataset():
         self.train_set = []
         self.test_set = []
         for i, model_name in enumerate(model_names):
-            self.dset.append(h5py.File(models_dir + model_name + '/h5_remesh/' + model_name + '.h5', 'r'))
+            self.dset.append(h5py.File(
+                models_dir + model_name + '/h5_remesh/' + model_name + '.h5',
+                'r'))
 
             self.num_examples.append(self.dset[i]['x'].shape[0])
             self.patch_size.append(self.dset[i]['x'].shape[1])
             np.random.seed = i
-            self.train_set.append(np.unique(np.random.random_integers(0, self.num_examples[i] - 1,
-                                                                      np.floor(0.9 * self.num_examples[i]))))
+            self.train_set.append(
+                np.unique(
+                    np.random.random_integers(0,
+                                              self.num_examples[i] - 1,
+                                              np.floor(
+                                                  0.9 * self.num_examples[i]))))
             full_set = range(0, self.num_examples[i])
             self.test_set.append(np.setdiff1d(full_set, self.train_set[i]))
 
@@ -58,10 +64,15 @@ class YcbReconstructionIterator(collections.Iterator):
 
     def next(self, train):
 
-        patch_size = self.dataset.patch_size[0]  # Since patch_size is the same for all the models
+        patch_size = self.dataset.patch_size[
+            0]  # Since patch_size is the same for all the models
 
-        batch_x = np.zeros((self.batch_size, patch_size, patch_size, patch_size, 1), dtype=np.float32)
-        batch_y = np.zeros((self.batch_size, patch_size, patch_size, patch_size, 1), dtype=np.float32)
+        batch_x = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
+        batch_y = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
 
         for i in range(self.batch_size):
             model_no = np.random.random_integers(0, len(self.dataset.dset) - 1)
@@ -85,7 +96,8 @@ class YcbReconstructionIterator(collections.Iterator):
         batch_y = batch_y.transpose(0, 3, 4, 1, 2)
 
         if self.flatten_y:
-            batch_y = batch_y.reshape(batch_y.shape[0], reduce(mul, batch_y.shape[1:]))
+            batch_y = batch_y.reshape(batch_y.shape[0],
+                                      reduce(mul, batch_y.shape[1:]))
 
         # apply post processors to the patches
         for post_processor in self.iterator_post_processors:
