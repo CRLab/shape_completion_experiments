@@ -41,9 +41,10 @@ RUN_SCRIPT = __file__
 
 def train(model, dataset):
     """
-    Trains the model, while continuously saving the current weights to CURRENT_WEIGHT_FILE and the best weights to
-    BEST_WEIGHTS_FILE. After training is done, it saves profiling information to "profile.txt" after printing it to the
-    terminal.
+    Trains the model, while continuously saving the current weights to
+    CURRENT_WEIGHT_FILE and the best weights to BEST_WEIGHTS_FILE. After
+    training is done, it saves profiling information to "profile.txt" after
+    printing it to the terminal.
 
     :param model: a compiled Theano model
     :param dataset: an hdf5 dataset
@@ -155,7 +156,8 @@ def test(model, dataset, weights_filepath):
         mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'model_' + str(i) + '.dae',
                            'model')
 
-        # Save visualizations of the predicted, input, and expected occupancy grids.
+        # Save visualizations of the predicted, input, and expected occupancy
+        # grids.
         viz.visualize_batch_x(pred, i, str(i),
                               TEST_OUTPUT_DIR + "pred_" + str(i))
         viz.visualize_batch_x(batch_x, i, str(i),
