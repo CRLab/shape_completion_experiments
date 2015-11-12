@@ -173,9 +173,13 @@ class ModelBuilder():
                      layers=self.layers)
 
 
-if __name__ == "__main__":
+def main():
     mb = ModelBuilder()
     m = mb.build_model()
     import IPython
 
     IPython.embed()
+
+
+if __name__ == "__main__":
+    main()
