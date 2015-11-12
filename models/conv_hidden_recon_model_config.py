@@ -69,9 +69,12 @@ class ConvHiddenReconModelConfig():
         return mb.build_model(y)
 
 
-if __name__ == "__main__":
+def main():
     model_config = ConvHiddenReconModelConfig()
     m = model_config.build_model()
     import IPython
 
     IPython.embed()
+
+if __name__ == "__main__":
+    main()
