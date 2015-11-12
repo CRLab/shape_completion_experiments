@@ -29,8 +29,8 @@ class TestDataset():
         return len(self.examples)
 
     def iterator(self,
-                 batch_size = None,
-                 num_batches = None):
+                 batch_size,
+                 num_batches):
         return TestDatasetIterator(self,
                                   batch_size = batch_size,
                                   num_batches = num_batches)

@@ -9,10 +9,10 @@ from utils.reconstruction_utils import build_training_example
 class ReconstructionDataset():
 
     def __init__(self,
-                 models_dir="/srv/data/downloaded_mesh_models/shrec/models/",
-                 pc_dir="/srv/data/shape_completion_data/shrec/gazebo_reconstruction_data_uniform_rotations_shrec_centered_scaled/",
-                 patch_size=72,
-                 num_models=None):
+                 models_dir,
+                 pc_dir,
+                 patch_size,
+                 num_models):
 
         self.models_dir = models_dir
         self.pc_dir = pc_dir

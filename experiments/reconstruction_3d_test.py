@@ -27,18 +27,6 @@ NB_TEST_BATCHES = 3
 # NB_EPOCH = 2000
 NB_EPOCH = 500
 
-RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
-TEST_OUTPUT_DIR = RESULTS_DIR + "test_output/"
-os.makedirs(TEST_OUTPUT_DIR)
-
-LOSS_FILE = RESULTS_DIR +'loss.txt'
-ERROR_FILE = RESULTS_DIR +'error.txt'
-CURRENT_WEIGHT_FILE = RESULTS_DIR + 'current_weights.h5'
-#BEST_WEIGHT_FILE = RESULTS_DIR + 'best_weights.h5'
-BEST_WEIGHT_FILE = 'best_weights.h5'
-PROFILE_FILE = RESULTS_DIR + 'profile.txt'
-RUN_SCRIPT = __file__
-
 def test(model, dataset, weights_filepath):
     """
     Runs the given model on the given dataset using the given weights. Then outputs results into the RESULTS_DIR folder.
@@ -144,4 +132,17 @@ def main():
 
 
 if __name__ == "__main__":
+
+    RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
+    TEST_OUTPUT_DIR = RESULTS_DIR + "test_output/"
+    os.makedirs(TEST_OUTPUT_DIR)
+
+    LOSS_FILE = RESULTS_DIR +'loss.txt'
+    ERROR_FILE = RESULTS_DIR +'error.txt'
+    CURRENT_WEIGHT_FILE = RESULTS_DIR + 'current_weights.h5'
+    #BEST_WEIGHT_FILE = RESULTS_DIR + 'best_weights.h5'
+    BEST_WEIGHT_FILE = 'best_weights.h5'
+    PROFILE_FILE = RESULTS_DIR + 'profile.txt'
+    RUN_SCRIPT = __file__
+
     main()
