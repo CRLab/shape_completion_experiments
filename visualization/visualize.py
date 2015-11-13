@@ -1,18 +1,21 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
 import numpy as np
 
 
 def visualize_3d(data, title=None, save_file=None):
-
     data[data < 0.5] = 0
 
     non_zero_indices = data.nonzero()
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1], non_zero_indices[2])
+    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1],
+                   non_zero_indices[2])
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
     if title is not None:
         plt.title(title)
@@ -22,8 +25,8 @@ def visualize_3d(data, title=None, save_file=None):
     else:
         fig.show()
 
-def visualize_multiple_3d(data0, data1, title=None, save_file=None):
 
+def visualize_multiple_3d(data0, data1, title=None, save_file=None):
     data0[data0 < 0.5] = 0
     data1[data1 < 0.5] = 0
 
@@ -32,8 +35,10 @@ def visualize_multiple_3d(data0, data1, title=None, save_file=None):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    Axes3D.scatter(ax, non_zero_indices0[0], non_zero_indices0[1], non_zero_indices0[2], c='b')
-    Axes3D.scatter(ax, non_zero_indices1[0], non_zero_indices1[1], non_zero_indices1[2], c='r')
+    Axes3D.scatter(ax, non_zero_indices0[0], non_zero_indices0[1],
+                   non_zero_indices0[2], c='b')
+    Axes3D.scatter(ax, non_zero_indices1[0], non_zero_indices1[1],
+                   non_zero_indices1[2], c='r')
 
     if title is not None:
         plt.title(title)
@@ -43,9 +48,9 @@ def visualize_multiple_3d(data0, data1, title=None, save_file=None):
     else:
         fig.show()
 
-#pc of shape (num_points, 3)
-def visualize_pointcloud(pc, subsample=False):
 
+# pc of shape (num_points, 3)
+def visualize_pointcloud(pc, subsample=False):
     if subsample:
         mask = np.random.rand(pc.shape[0])
         pc = pc[mask < .1]
@@ -56,8 +61,8 @@ def visualize_pointcloud(pc, subsample=False):
 
     fig.show()
 
-def visualize_pointclouds(pc0, pc1, subsample0=False, subsample1=False):
 
+def visualize_pointclouds(pc0, pc1, subsample0=False, subsample1=False):
     if subsample0:
         mask = np.random.rand(pc0.shape[0])
         pc0 = pc0[mask < .005]
@@ -76,15 +81,19 @@ def visualize_pointclouds(pc0, pc1, subsample0=False, subsample1=False):
 
 
 def visualize_batch_x(batch_x, i=0, title=None, save_file=None):
-
-    #switch (b 2 c 0 1) to (b 0 1 2 c)
+    # switch (b 2 c 0 1) to (b 0 1 2 c)
     b = batch_x.transpose(0, 3, 4, 1, 2)
     data = b[i, :, :, :, :]
     print data.shape
     visualize_3d(data, title, save_file)
 
-if __name__ == "__main__":
+
+def main():
     data = np.zeros((10, 10, 10, 1))
     data[5, 5, 5, 0] = 1
 
     visualize_3d(data)
+
+
+if __name__ == "__main__":
+    main()

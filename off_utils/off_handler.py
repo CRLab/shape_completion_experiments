@@ -1,9 +1,7 @@
-
 import numpy as np
 
 
 class OffHandler():
-
     def read(self, filepath):
 
         f = open(filepath, 'r')
@@ -37,7 +35,8 @@ class OffHandler():
         f = open(outfile, 'w')
         fs = ""
         fs += "OFF\n"
-        fs += str(self.v_count) + " " + str(self.f_count) + " "  + str(self.e_count) + "\n"
+        fs += str(self.v_count) + " " + str(self.f_count) + " " + str(
+            self.e_count) + "\n"
 
         i = 0
         while i < self.v_count:
@@ -57,9 +56,9 @@ class OffHandler():
     def recenter_mesh(self):
 
         bbox = self.get_bounding_box()
-        offset = [(bbox[1] - bbox[0])/2.0 + bbox[0],
-                  (bbox[3] - bbox[2])/2.0 + bbox[2],
-                  (bbox[5] - bbox[4])/2.0 + bbox[4]]
+        offset = [(bbox[1] - bbox[0]) / 2.0 + bbox[0],
+                  (bbox[3] - bbox[2]) / 2.0 + bbox[2],
+                  (bbox[5] - bbox[4]) / 2.0 + bbox[4]]
 
         self.vertices -= offset
 
@@ -73,17 +72,18 @@ class OffHandler():
         return offset, scale_factor
 
     def get_centroid(self):
-        return np.average(self.vertices[:,0]), np.average(self.vertices[:,1]), np.average(self.vertices[:, 2])
+        return np.average(self.vertices[:, 0]), np.average(
+            self.vertices[:, 1]), np.average(self.vertices[:, 2])
 
     def get_full_vertices(self):
         return self.vertices
 
     def get_bounding_box(self):
-        return self.vertices[:, 0].min(),\
-               self.vertices[:, 0].max(),\
-               self.vertices[:, 1].min(),\
-               self.vertices[:, 1].max(),\
-               self.vertices[:, 2].min(),\
+        return self.vertices[:, 0].min(), \
+               self.vertices[:, 0].max(), \
+               self.vertices[:, 1].min(), \
+               self.vertices[:, 1].max(), \
+               self.vertices[:, 2].min(), \
                self.vertices[:, 2].max()
 
     def get_scale_factor(self, desired_largest_side=.25):
@@ -99,6 +99,3 @@ class OffHandler():
         largest_dim = ranges[-1]
 
         return desired_largest_side / largest_dim
-
-
-
