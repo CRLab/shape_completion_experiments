@@ -349,18 +349,19 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
                                               pc_center_in_voxel_grid=(
                                                   15.0, 15.0, 11.0))
 
-
-    #viz.visualize_3d(x)
-    #viz.visualize_pointcloud(pc[:, 0:3])
-    #import IPython
-    #IPython.embed()
-    #import time
-    #time.sleep(1)
+    # viz.visualize_3d(x)
+    # viz.visualize_pointcloud(pc[:, 0:3])
+    # import IPython
+    # IPython.embed()
+    # import time
+    # time.sleep(1)
 
     return x
 
-def build_test_from_pc_scaled(pc, patch_size, custom_scale=1, custom_offset=(0, 0, 0)):
-    custom_offset = np.array(custom_offset).reshape(3,1)
+
+def build_test_from_pc_scaled(pc, patch_size, custom_scale=1,
+                              custom_offset=(0, 0, 0)):
+    custom_offset = np.array(custom_offset).reshape(3, 1)
 
     min_x = pc[:, 0].min()
     min_y = pc[:, 1].min()
@@ -369,22 +370,27 @@ def build_test_from_pc_scaled(pc, patch_size, custom_scale=1, custom_offset=(0, 
     max_y = pc[:, 1].max()
     max_z = pc[:, 2].max()
 
-    center = (min_x + (max_x-min_x)/2.0, min_y + (max_y-min_y)/2.0, min_z + (max_z-min_z)/2.0)
+    center = (min_x + (max_x - min_x) / 2.0, min_y + (max_y - min_y) / 2.0,
+              min_z + (max_z - min_z) / 2.0)
 
-    voxel_resolution = max((max_x - min_x), (max_y - min_y), (max_z - min_z)) / ((2.0/3.0) * patch_size)
+    voxel_resolution = max((max_x - min_x), (max_y - min_y),
+                           (max_z - min_z)) / ((2.0 / 3.0) * patch_size)
     print('Voxel Res = ' + str(voxel_resolution))
 
-    #now non_zero_arr and pc points are in the same frame of reference.
-    #since the images were captured with the model at the origin
-    #we can just compute an occupancy grid centered around the origin.
-    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size, pc_center_in_voxel_grid=(15.0, 15.0, 11.0))
+    # now non_zero_arr and pc points are in the same frame of reference.
+    # since the images were captured with the model at the origin
+    # we can just compute an occupancy grid centered around the origin.
+    x = create_voxel_grid_around_point_scaled(
+        pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size,
+        pc_center_in_voxel_grid=(15.0, 15.0, 11.0))
 
-    #viz.visualize_3d(x)
-    #viz.visualize_pointcloud(pc[:, 0:3])
-    #import IPython
-    #IPython.embed()
-    #import time
-    #time.sleep(1)
+    # viz.visualize_3d(x)
+    # viz.visualize_pointcloud(pc[:, 0:3])
+    # import IPython
+    # IPython.embed()
+    # import time
+    # time.sleep(1)
+
 
 def get_occluded_voxel_grid(binary_voxel_grid, method='simple'):
     return get_ternary_voxel_grid(binary_voxel_grid, method) == 2
