@@ -430,7 +430,7 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
                         # grid, and everything behind it to 2.
                         ternary_voxel_grid[i, j, k] = 1
                         ternary_voxel_grid[i, j, k + 1:voxel_grid_shape[2]] = 2
-                        continue
+                        break
         return ternary_voxel_grid
     elif method is 'projection':
         raise NotImplementedError(
