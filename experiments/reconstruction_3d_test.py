@@ -1,4 +1,5 @@
 from datasets import reconstruction_test_dataset
+from utils.reconstruction_utils import get_occluded_voxel_grid
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
@@ -61,9 +62,19 @@ def test(model, dataset, weights_filepath):
     pred_as_b012c = pred.transpose(0, 3, 4, 1, 2)
 
     for i in range(BATCH_SIZE):
-        v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
+        batch_x = batch_x.transpose(0, 3, 4, 1, 2)
+        mask = get_occluded_voxel_grid(batch_x[i, :, :, :, 0])
+        completed_region = pred_as_b012c[i, :, :, :, 0] * mask
+        output = batch_x[i, :, :, :, 0] + completed_region
+
+        v, t = mcubes.marching_cubes(output, 0.5)
         mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'model_' + str(i) + '.dae',
                            'model')
+        v, t = mcubes.marching_cubes(batch_x[i, :, :, :, 0], 0.5)
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'input_' + str(i) + '.dae',
+                           'model')
+
+        batch_x = batch_x.transpose(0, 3, 4, 1, 2)
         viz.visualize_batch_x(pred, i, str(i),
                               TEST_OUTPUT_DIR + "pred_" + str(i))
         viz.visualize_batch_x(batch_x, i, str(i),
@@ -133,7 +144,7 @@ def get_dataset():
     """
 
     dataset = reconstruction_test_dataset.TestDataset(
-        '/srv/data/shape_completion_data/test_1/', '', 30)
+        '/srv/data/shape_completion_data/test_2/', '', 30)
     return dataset
 
 

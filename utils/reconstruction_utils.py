@@ -43,7 +43,6 @@ def create_voxel_grid_around_point(points, patch_center, voxel_resolution=0.001,
 
     return voxel_grid
 
-
 def create_voxel_grid_around_point_scaled(points, patch_center,
                                           voxel_resolution, num_voxels_per_dim,
                                           pc_center_in_voxel_grid):
@@ -77,7 +76,6 @@ def create_voxel_grid_around_point_scaled(points, patch_center,
 
     return voxel_grid
 
-
 def map_pointclouds_to_world(pc, non_zero_arr, model_pose):
     # this works, to reorient pointcloud apply the model_pose transform, this is
     # the rotation that was applied to the model in gazebo.
@@ -106,7 +104,6 @@ def map_pointclouds_to_world(pc, non_zero_arr, model_pose):
     # rotate point cloud by same rotation that model went through
     pc2_out = np.dot(model_pose.T, pc2_out)
     return pc2_out, non_zero_arr1
-
 
 def map_pointclouds_to_camera_frame(pc, non_zero_arr, model_pose):
     # apply the model_pose transform, this is the rotation that was applied to
@@ -138,7 +135,6 @@ def map_pointclouds_to_camera_frame(pc, non_zero_arr, model_pose):
     pc2_out = np.dot(trans_matrix, pc2_out.T)
 
     return pc2_out, non_zero_arr1
-
 
 def build_training_example(binvox_file_path, model_pose_filepath,
                            single_view_pointcloud_filepath, patch_size,
@@ -220,7 +216,6 @@ def build_training_example(binvox_file_path, model_pose_filepath,
     # IPython.embed()
 
     return x, y
-
 
 def build_training_example_scaled(binvox_file_path, model_pose_filepath,
                                   single_view_pointcloud_filepath, patch_size,
@@ -311,7 +306,6 @@ def build_training_example_scaled(binvox_file_path, model_pose_filepath,
 
     return x, y
 
-
 def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
                               custom_scale=1, custom_offset=(0, 0, 0)):
     custom_offset = np.array(custom_offset).reshape(3, 1)
@@ -377,7 +371,8 @@ def build_test_from_pc_scaled(pc, patch_size, custom_scale=1, custom_offset=(0, 
     #now non_zero_arr and pc points are in the same frame of reference.
     #since the images were captured with the model at the origin
     #we can just compute an occupancy grid centered around the origin.
-    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size, pc_center_in_voxel_grid=(15.0, 15.0, 11.0))
+    pc_center_in_voxel_grid=(15.0, 15.0, 11.0)
+    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size, pc_center_in_voxel_grid=pc_center_in_voxel_grid)
 
     #viz.visualize_3d(x)
     #viz.visualize_pointcloud(pc[:, 0:3])
@@ -386,9 +381,44 @@ def build_test_from_pc_scaled(pc, patch_size, custom_scale=1, custom_offset=(0, 
     #import time
     #time.sleep(1)
 
+    offset = np.array(center) - np.array(pc_center_in_voxel_grid) * voxel_resolution
+
+    return x, voxel_resolution, offset
+
+def build_high_res_voxel_grid(pc, scale, patch_size, custom_scale=1, custom_offset=(0, 0, 0)):
+    custom_offset = np.array(custom_offset).reshape(3,1)
+
+    min_x = pc[:, 0].min()
+    min_y = pc[:, 1].min()
+    min_z = pc[:, 2].min()
+    max_x = pc[:, 0].max()
+    max_y = pc[:, 1].max()
+    max_z = pc[:, 2].max()
+
+    center = (min_x + (max_x-min_x)/2.0, min_y + (max_y-min_y)/2.0, min_z + (max_z-min_z)/2.0)
+
+    voxel_resolution = max((max_x - min_x), (max_y - min_y), (max_z - min_z)) / ((2.0/3.0) * scale * patch_size)
+    print('Voxel Res = ' + str(voxel_resolution))
+
+    #now non_zero_arr and pc points are in the same frame of reference.
+    #since the images were captured with the model at the origin
+    #we can just compute an occupancy grid centered around the origin.
+    pc_center_in_voxel_grid = scale * np.array((15.0, 15.0, 11.0))
+    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=scale * patch_size, pc_center_in_voxel_grid=pc_center_in_voxel_grid)
+
+    #viz.visualize_3d(x)
+    #viz.visualize_pointcloud(pc[:, 0:3])
+    #import IPython
+    #IPython.embed()
+    #import time
+    #time.sleep(1)
+
+    offset = np.array(center) - np.array(pc_center_in_voxel_grid) * voxel_resolution
+
+    return x, voxel_resolution, offset
+
 def get_occluded_voxel_grid(binary_voxel_grid, method='simple'):
     return get_ternary_voxel_grid(binary_voxel_grid, method) == 2
-
 
 def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     """
@@ -424,7 +454,7 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
                         # grid, and everything behind it to 2.
                         ternary_voxel_grid[i, j, k] = 1
                         ternary_voxel_grid[i, j, k + 1:voxel_grid_shape[2]] = 2
-                        continue
+                        break
         return ternary_voxel_grid
     elif method is 'projection':
         raise NotImplementedError(

@@ -49,6 +49,29 @@ def visualize_multiple_3d(data0, data1, title=None, save_file=None):
         fig.show()
 
 
+def visualize_occupancygrid(data, title=None, save_file=None):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    occupied = data == 1
+    non_zero_indices = occupied.nonzero()
+    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1],
+                   non_zero_indices[2], c='b')
+
+    occluded = data == 2
+    non_zero_indices = occluded.nonzero()
+    Axes3D.scatter(ax, non_zero_indices[0], non_zero_indices[1],
+                   non_zero_indices[2], c='r')
+
+    if title is not None:
+        plt.title(title)
+
+    if save_file:
+        plt.savefig(save_file)
+    else:
+        fig.show()
+
 # pc of shape (num_points, 3)
 def visualize_pointcloud(pc, subsample=False):
     if subsample:
