@@ -70,8 +70,8 @@ class ShrecHoldoutIterator(collections.Iterator):
 
         for i in range(self.batch_size):
             model_no = np.random.random_integers(0, len(self.dataset.dset) - 1)
-            index = np.random.random_integers(0,
-                                              self.dataset.get_num_examples() - 1)
+            index = np.random.random_integers(
+                0, self.dataset.get_num_examples() - 1)
 
             x = self.dataset.dset[model_no]['x'][index]
             y = self.dataset.dset[model_no]['y'][index]
@@ -109,9 +109,9 @@ class ShrecHoldoutIterator(collections.Iterator):
 def main():
     h5_dir = '/srv/data/shape_completion_data/shrec/h5/'
     model_name = ['D00003']
-    dataset = ShrecReconstructionDataset(h5_dir, model_name)
+    dataset = ShrecHoldoutDataset(h5_dir, model_name)
     it = dataset.iterator(5)
-    it.next(train=1)
+    it.next()
 
 if __name__ == "__main__":
     main()

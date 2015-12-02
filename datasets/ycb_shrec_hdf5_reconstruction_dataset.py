@@ -39,7 +39,7 @@ class YcbShrecReconstructionDataset:
                 shrec_models_dir + model_name + '/' + model_name + '.h5', 'r'))
             self.shrec_num_examples.append(self.shrec_dset[i]['x'].shape[0])
             self.shrec_patch_size.append(self.shrec_dset[i]['x'].shape[1])
-            #np.random.seed = i # Doesn't seem to have an effect on the choice function
+            np.random.seed(i)
             self.shrec_train_set.append(np.random.choice(
                 range(self.shrec_num_examples[i]),
                 int(np.floor(0.9 * self.shrec_num_examples[i])), replace=False))
