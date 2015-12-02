@@ -207,7 +207,7 @@ def get_model():
     # output: 64 cubes of side length 30-5+1 = 26
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
                             nb_row=filter_size, nb_col=filter_size,
-                            nb_depth=filter_size, border_mode='valid'))
+                            nb_depth=filter_size, border_mode='valid', activation='relu', init='he_normal'))
     # output: 64 cubes of side length 26/2 = 13
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(.5))
@@ -219,7 +219,7 @@ def get_model():
     # output: 64 cubes of side length 13-4+1 = 10
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
                             nb_row=filter_size, nb_col=filter_size,
-                            nb_depth=filter_size, border_mode='valid'))
+                            nb_depth=filter_size, border_mode='valid', activation='relu', init='he_normal'))
     # output: 64 cubes of size length 10/2 = 5
     model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     # During training: drop (set to zero) each of the current outputs with a 0.5
@@ -234,7 +234,7 @@ def get_model():
     # output: 64 cubes of side length 5-3+1 = 3
     model.add(Convolution3D(nb_filter=nb_filter_out, stack_size=nb_filter_in,
                             nb_row=filter_size, nb_col=filter_size,
-                            nb_depth=filter_size, border_mode='valid'))
+                            nb_depth=filter_size, border_mode='valid', activation='relu', init='he_normal'))
     # During training: drop (set to zero) each of the current outputs with a 0.5
     # probability.
     # During testing: multiply each of the current outputs by that probability.
