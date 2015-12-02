@@ -1,45 +1,65 @@
 import h5py
 string_dtype = h5py.special_dtype(vlen=bytes)
-from datasets.ycb_reconstruction_dataset import YcbDataset, build_training_example_scaled
 from multiprocessing import Pool
 import os
+from multiprocessing import Process, Queue
+from datasets.shrec_reconstruction_dataset import ShrecReconstructionDataset, \
+    build_training_example_scaled
 
 PATCH_SIZE = 30
 
-from multiprocessing import Process, Queue
 
 def reader(index_queue, examples_queue):
-
     while True:
         msg = index_queue.get()
-        if (msg == 'DONE'):
+        if msg == 'DONE':
             break
         else:
             index = msg
             single_view_pointcloud_filepath = recon_dataset.examples[index][0]
             pose_filepath = recon_dataset.examples[index][1]
             model_filepath = recon_dataset.examples[index][2]
+            scale_filepath = recon_dataset.examples[index][3]
+
+            f = open(scale_filepath)
+            line_0 = f.readline()
+            offset_x, offset_y, offset_z, scale = line_0.split()
+            custom_scale = float(scale)
+            custom_offset = (float(offset_x), float(offset_y), float(offset_z))
+
             try:
-                x, y = build_training_example_scaled(model_filepath, pose_filepath, single_view_pointcloud_filepath, PATCH_SIZE)
+                x, y = build_training_example_scaled(model_filepath,
+                                                     pose_filepath,
+                                                     single_view_pointcloud_filepath,
+                                                     PATCH_SIZE,
+                                                     custom_scale=custom_scale,
+                                                     custom_offset=custom_offset)
                 examples_queue.put((index, x, y, single_view_pointcloud_filepath, pose_filepath, model_filepath))
             except:
                 examples_queue.put((index, None, None, single_view_pointcloud_filepath, pose_filepath, model_filepath))
 
-if __name__=='__main__':
 
-    pc_base_dir = '/srv/data/shape_completion_data/shrec/gazebo_reconstruction_data_uniform_rotations_shrec_centered_scaled/'
-    model_base_dir = '/srv/data/downloaded_mesh_models/shrec/models/'
+#def main():
+
+
+if __name__ == '__main__':
+    #main()
+    pc_dir = '/srv/data/shape_completion_data/shrec/gazebo_reconstruction_data_uniform_rotations_shrec_centered_scaled/'
+    models_dir = '/srv/data/downloaded_mesh_models/shrec/models/'
     h5_base_dir = '/srv/data/shape_completion_data/shrec/h5/'
 
-    model_names = os.listdir(pc_base_dir)
+    model_names = os.listdir(pc_dir)
 
     for model_name in model_names:
-        models_dir = model_base_dir + model_name + '/'
-        pc_dir = pc_base_dir + model_name + '/'
         h5_dir = h5_base_dir + model_name + '/'
-        os.mkdir(h5_dir)
+        if not os.path.exists(h5_dir):
+            os.mkdir(h5_dir)
 
-        recon_dataset = YcbDataset(data_dir, model_name, patch_size=PATCH_SIZE)
+        if os.path.isfile(h5_dir + model_name + '.h5'):
+            print('Skipping File: ' + h5_dir + model_name + '.h5')
+            continue
+
+        recon_dataset = ShrecReconstructionDataset(models_dir, pc_dir, model_name, patch_size=PATCH_SIZE)
         num_examples = recon_dataset.get_num_examples()
 
 
@@ -93,5 +113,3 @@ if __name__=='__main__':
             h5_dset['x'][index] = x
             h5_dset['y'][index] = y
             h5_dset.close()
-
-
