@@ -245,11 +245,11 @@ def get_model():
     # output: a vector of size 64*3*3*3 = 1728
     model.add(Flatten())
     # output: a vector of size 3000
-    model.add(Dense(nb_filter_out * dim * dim * dim, 3000, init='normal'))
+    model.add(Dense(nb_filter_out * dim * dim * dim, 3000, init='he_normal', activation='relu'))
     # output: a vector of size 4000
-    model.add(Dense(3000, 4000, init='normal'))
+    model.add(Dense(3000, 4000, init='he_normal', activation='relu'))
     # output: a vector of size PATCH_SIZE*PATCH_SIZE*PATCH_SIZE
-    model.add(Dense(4000, PATCH_SIZE * PATCH_SIZE * PATCH_SIZE, init='normal',
+    model.add(Dense(4000, PATCH_SIZE * PATCH_SIZE * PATCH_SIZE, init='glorot_normal',
                     activation='sigmoid'))
 
     optimizer = RMSprop()
