@@ -71,7 +71,7 @@ class ShrecHoldoutIterator(collections.Iterator):
         for i in range(self.batch_size):
             model_no = np.random.random_integers(0, len(self.dataset.dset) - 1)
             index = np.random.random_integers(
-                0, self.dataset.get_num_examples() - 1)
+                0, self.dataset.dset[model_no]['x'].shape[0] - 1)
 
             x = self.dataset.dset[model_no]['x'][index]
             y = self.dataset.dset[model_no]['y'][index]

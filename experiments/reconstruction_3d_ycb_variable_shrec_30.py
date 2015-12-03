@@ -19,7 +19,7 @@ import numpy as np
 
 PR = cProfile.Profile()
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 PATCH_SIZE = 30
 
 NB_TRAIN_BATCHES = 100
@@ -52,15 +52,28 @@ def train(model, train_dataset, test_dataset):
     with open(LOSS_FILE, "w") as loss_file:
         print("logging loss")
 
-    with open(ERROR_FILE, "w") as error_file:
-        print("logging error")
+    with open(ERROR_TRAINED_VIEWS, "w"):
+        print("logging error for trained views")
 
-    with open(JACCARD_FILE, "w") as jaccard_file:
-        print("logging jaccard_error")
+    with open(ERROR_HOLDOUT_VIEWS, "w"):
+        print("logging error for holdout views")
+
+    with open(ERROR_HOLDOUT_MODELS, "w"):
+        print("logging error for holdout models")
+
+    with open(JACCARD_TRAINED_VIEWS, "w"):
+        print("logging jaccard_error for trained views")
+
+    with open(JACCARD_HOLDOUT_VIEWS, "w"):
+        print("logging jaccard_error for holdout views")
+
+    with open(JACCARD_HOLDOUT_MODELS, "w"):
+        print("logging jaccard_error for holdout models")
 
     lowest_error = 1000000
 
     for e in range(NB_EPOCH):
+        print 'Epoch: ' + str(e)
         PR.enable()
         train_iterator = train_dataset.iterator(batch_size=BATCH_SIZE,
                                           num_batches=NB_TEST_BATCHES,
@@ -73,25 +86,56 @@ def train(model, train_dataset, test_dataset):
             with open(LOSS_FILE, "a") as loss_file:
                 loss_file.write(str(loss) + '\n')
 
-        test_iterator = test_dataset.iterator(batch_size=BATCH_SIZE,
+        test_iterator1 = train_dataset.iterator(batch_size=BATCH_SIZE,
+                                         num_batches=NB_TRAIN_BATCHES,
+                                         flatten_y=True)
+        test_iterator2 = test_dataset.iterator(batch_size=BATCH_SIZE,
                                          num_batches=NB_TRAIN_BATCHES,
                                          flatten_y=True)
 
         average_error = 0
         for b in range(NB_TEST_BATCHES):
-            X_batch, Y_batch = test_iterator.next(train=0)
+            X_batch, Y_batch = test_iterator1.next(train=1)
             error = model.test(X_batch, Y_batch)
             prediction = model._predict(X_batch)
             binarized_prediction = np.array(prediction > 0.5, dtype=int)
             jaccard_similarity = numpy_jaccard_similarity(Y_batch,
                                                           binarized_prediction)
-            average_error += error
             print('error: ' + str(error))
             print('jaccard_similarity: ' + str(jaccard_similarity))
-            with open(ERROR_FILE, "a") as error_file:
+            with open(ERROR_TRAINED_VIEWS, "a") as error_file:
                 error_file.write(str(error) + '\n')
-            with open(JACCARD_FILE, "a") as jaccard_file:
+            with open(JACCARD_TRAINED_VIEWS, "a") as jaccard_file:
                 jaccard_file.write(str(jaccard_similarity) + '\n')
+
+            X_batch, Y_batch = test_iterator1.next(train=0)
+            error = model.test(X_batch, Y_batch)
+            prediction = model._predict(X_batch)
+            binarized_prediction = np.array(prediction > 0.5, dtype=int)
+            jaccard_similarity = numpy_jaccard_similarity(Y_batch,
+                                                          binarized_prediction)
+            print('error: ' + str(error))
+            print('jaccard_similarity: ' + str(jaccard_similarity))
+            with open(ERROR_HOLDOUT_VIEWS, "a") as error_file:
+                error_file.write(str(error) + '\n')
+            with open(JACCARD_HOLDOUT_VIEWS, "a") as jaccard_file:
+                jaccard_file.write(str(jaccard_similarity) + '\n')
+
+            average_error += error
+
+            X_batch, Y_batch = test_iterator2.next()
+            error = model.test(X_batch, Y_batch)
+            prediction = model._predict(X_batch)
+            binarized_prediction = np.array(prediction > 0.5, dtype=int)
+            jaccard_similarity = numpy_jaccard_similarity(Y_batch,
+                                                          binarized_prediction)
+            print('error: ' + str(error))
+            print('jaccard_similarity: ' + str(jaccard_similarity))
+            with open(ERROR_HOLDOUT_MODELS, "a") as error_file:
+                error_file.write(str(error) + '\n')
+            with open(JACCARD_HOLDOUT_MODELS, "a") as jaccard_file:
+                jaccard_file.write(str(jaccard_similarity) + '\n')
+
         average_error /= NB_TEST_BATCHES
 
         if e % 4 == 0:
@@ -101,6 +145,9 @@ def train(model, train_dataset, test_dataset):
             lowest_error = average_error
             print('new lowest error ' + str(lowest_error))
             model.save_weights(BEST_WEIGHT_FILE)
+
+        if e % 10 == 0:
+            test(model, train_dataset, test_dataset, BEST_WEIGHT_FILE, e)
 
         PR.disable()
         s = StringIO.StringIO()
@@ -113,7 +160,7 @@ def train(model, train_dataset, test_dataset):
         f.close()
 
 
-def test(model, dataset, weights_filepath):
+def test(model, train_dataset, test_dataset, weights_filepath, epoch=-1):
     """
     Runs the given model on the given dataset using the given weights. Then
     outputs results into the RESULTS_DIR folder. Results include the mesh
@@ -129,11 +176,18 @@ def test(model, dataset, weights_filepath):
 
     model.load_weights(weights_filepath)
 
-    train_iterator = dataset.iterator(batch_size=BATCH_SIZE,
+    if epoch == -1:
+        base_dir = 'final/'
+    else:
+        base_dir = 'epoch_' + str(epoch) + '/'
+
+    sub_dir = base_dir + 'trained_views/'
+    os.makedirs(TEST_OUTPUT_DIR + sub_dir)
+    train_iterator = train_dataset.iterator(batch_size=BATCH_SIZE,
                                       num_batches=NB_TEST_BATCHES,
                                       flatten_y=False)
 
-    batch_x, batch_y = train_iterator.next(train=0)
+    batch_x, batch_y = train_iterator.next(train=1)
 
     pred = model._predict(batch_x)
     # Prediction comes in format [batch number, z-axis, patch number, x-axis,
@@ -158,17 +212,61 @@ def test(model, dataset, weights_filepath):
         # 0.0 0.3 0.4|0.6 1.0 1.0
         v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
         # Save predicted object mesh.
-        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + 'model_' + str(i) + '.dae',
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + sub_dir + 'model_' + str(i) + '.dae',
                            'model')
 
         # Save visualizations of the predicted, input, and expected occupancy
         # grids.
         viz.visualize_batch_x(pred, i, str(i),
-                              TEST_OUTPUT_DIR + "pred_" + str(i))
+                              TEST_OUTPUT_DIR + sub_dir + "pred_" + str(i))
         viz.visualize_batch_x(batch_x, i, str(i),
-                              TEST_OUTPUT_DIR + "input_" + str(i))
+                              TEST_OUTPUT_DIR + sub_dir + "input_" + str(i))
         viz.visualize_batch_x(batch_y, i, str(i),
-                              TEST_OUTPUT_DIR + "expected_" + str(i))
+                              TEST_OUTPUT_DIR + sub_dir + "expected_" + str(i))
+
+    sub_dir = base_dir + 'holdout_views/'
+    os.makedirs(TEST_OUTPUT_DIR + sub_dir)
+    batch_x, batch_y = train_iterator.next(train=0)
+    pred = model._predict(batch_x)
+    pred = pred.reshape(BATCH_SIZE, PATCH_SIZE, 1, PATCH_SIZE, PATCH_SIZE)
+    pred_as_b012c = pred.transpose(0, 3, 4, 1, 2)
+
+    for i in range(BATCH_SIZE):
+        v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + sub_dir + 'model_' + str(i) + '.dae',
+                           'model')
+        # Save visualizations of the predicted, input, and expected occupancy
+        # grids.
+        viz.visualize_batch_x(pred, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "pred_" + str(i))
+        viz.visualize_batch_x(batch_x, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "input_" + str(i))
+        viz.visualize_batch_x(batch_y, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "expected_" + str(i))
+
+    sub_dir = base_dir + 'holdout_models/'
+    os.makedirs(TEST_OUTPUT_DIR + sub_dir)
+    test_iterator = test_dataset.iterator(batch_size=BATCH_SIZE,
+                                      num_batches=NB_TEST_BATCHES,
+                                      flatten_y=False)
+    batch_x, batch_y = test_iterator.next()
+
+    pred = model._predict(batch_x)
+    pred = pred.reshape(BATCH_SIZE, PATCH_SIZE, 1, PATCH_SIZE, PATCH_SIZE)
+    pred_as_b012c = pred.transpose(0, 3, 4, 1, 2)
+
+    for i in range(BATCH_SIZE):
+        v, t = mcubes.marching_cubes(pred_as_b012c[i, :, :, :, 0], 0.5)
+        mcubes.export_mesh(v, t, TEST_OUTPUT_DIR + sub_dir + 'model_' + str(i) + '.dae',
+                           'model')
+        # Save visualizations of the predicted, input, and expected occupancy
+        # grids.
+        viz.visualize_batch_x(pred, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "pred_" + str(i))
+        viz.visualize_batch_x(batch_x, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "input_" + str(i))
+        viz.visualize_batch_x(batch_y, i, str(i),
+                              TEST_OUTPUT_DIR + sub_dir + "expected_" + str(i))
 
 
 def get_model():
@@ -365,7 +463,7 @@ def get_dataset(num_shrec_models):
 
 def test_script(num_shrec_models):
 
-    print('Training on all YCB models + ' + str(num_shrec_models) + 'SHREC models:')
+    print('Training on all YCB models + ' + str(num_shrec_models) + ' SHREC models:')
 
     print('Step 1/4 -- Compiling Model')
     model = get_model()
@@ -374,7 +472,7 @@ def test_script(num_shrec_models):
     print('Step 3/4 -- Training Model')
     train(model, train_dataset, test_dataset)
     print('Step 4/4 -- Testing Model')
-    test(model, train_dataset, BEST_WEIGHT_FILE)
+    test(model, train_dataset, test_dataset, BEST_WEIGHT_FILE, -1)
 
 
 if __name__ == "__main__":
@@ -386,15 +484,21 @@ if __name__ == "__main__":
     shutil.copy2(__file__, RESULTS_DIR + __file__)
 
     for i in range(6):
-
-        num_shrec_models = i * 50
+        if i == 0:
+            num_shrec_models = 25
+        else:
+            num_shrec_models = i * 50
         SUB_DIR = 'all_ycb_' + str(num_shrec_models) + '_shrec/'
 
         TEST_OUTPUT_DIR = RESULTS_DIR + SUB_DIR + "test_output/"
         os.makedirs(TEST_OUTPUT_DIR)
         LOSS_FILE = RESULTS_DIR + SUB_DIR + 'loss.txt'
-        ERROR_FILE = RESULTS_DIR + SUB_DIR + 'cross_entropy_error.txt'
-        JACCARD_FILE = RESULTS_DIR + SUB_DIR + 'jaccard_error.txt'
+        ERROR_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_trained_views.txt'
+        ERROR_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_holdout_views.txt'
+        ERROR_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'cross_entropy_holdout_models.txt'
+        JACCARD_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_trained_views.txt'
+        JACCARD_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_views.txt'
+        JACCARD_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_models.txt'
         CURRENT_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'current_weights.h5'
         BEST_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'best_weights.h5'
         PROFILE_FILE = RESULTS_DIR + SUB_DIR + 'profile.txt'

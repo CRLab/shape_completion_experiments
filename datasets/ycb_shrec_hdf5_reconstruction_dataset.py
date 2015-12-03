@@ -92,6 +92,8 @@ class YcbShrecReconstructionIterator(collections.Iterator):
 
         num_ycb_models = len(self.dataset.ycb_dset)
         num_shrec_models = len(self.dataset.shrec_dset)
+        #print 'num_ycb_models: ' + str(num_ycb_models)
+        #print 'num_shrec_models: ' + str(num_shrec_models)
         p = [float(num_ycb_models)/(num_ycb_models + num_shrec_models),
              float(num_shrec_models)/(num_ycb_models + num_shrec_models)]
         dataset_no = np.random.choice([0, 1], size=self.batch_size, p=p)

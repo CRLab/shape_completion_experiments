@@ -22,8 +22,10 @@ def visualize_3d(data, title=None, save_file=None):
 
     if save_file:
         plt.savefig(save_file)
+        plt.close('all')
     else:
         fig.show()
+
 
 
 def visualize_multiple_3d(data0, data1, title=None, save_file=None):
