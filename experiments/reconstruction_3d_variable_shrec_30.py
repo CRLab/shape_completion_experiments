@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from datasets import ycb_shrec_hdf5_reconstruction_dataset
+#test for screen
+import matplotlib
+matplotlib.use('Agg')
+
+from datasets import shrec_h5py_reconstruction_dataset
 from datasets import shrec_h5py_holdout_dataset
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Flatten
@@ -367,28 +371,6 @@ def get_dataset(num_shrec_models):
     :return: an hdf5 dataset
     """
 
-    ycb_models_dir = '/srv/data/shape_completion_data/ycb/'
-    ycb_model_names = ['black_and_decker_lithium_drill_driver',
-                   'block_of_wood_6in',
-                   'blue_wood_block_1inx1in',
-                   'brine_mini_soccer_ball',
-                   'campbells_condensed_tomato_soup',
-                   'cheerios_14oz',
-                   'clorox_disinfecting_wipes_35',
-                   'comet_lemon_fresh_bleach',
-                   'domino_sugar_1lb',
-                   'frenchs_classic_yellow_mustard_14oz',
-                   'melissa_doug_farm_fresh_fruit_banana',
-                   'melissa_doug_farm_fresh_fruit_lemon',
-                   'morton_salt_shaker',
-                   'play_go_rainbow_stakin_cups_1_yellow',
-                   'play_go_rainbow_stakin_cups_2_orange',
-                   'pringles_original',
-                   # 'red_metal_cup_white_speckles',
-                   'rubbermaid_ice_guard_pitcher_blue',
-                   'soft_scrub_2lb_4oz',
-                   'sponge_with_textured_cover']
-
     shrec_models_dir = '/srv/data/shape_completion_data/shrec/train_h5/'
     shrec_model_names = ['D00881', 'D00866', 'D01122', 'D00913', 'D00983',
                          'D00069', 'D00094', 'D01199', 'D00804', 'D00345',
@@ -442,8 +424,7 @@ def get_dataset(num_shrec_models):
                          'D00247', 'D01027', 'D00642', 'D00797', 'D00587']
 
     shrec_model_names = shrec_model_names[0:num_shrec_models]
-    train_dataset = ycb_shrec_hdf5_reconstruction_dataset.YcbShrecReconstructionDataset(
-        ycb_models_dir, ycb_model_names,
+    train_dataset = shrec_h5py_reconstruction_dataset.ShrecReconstructionDataset(
         shrec_models_dir, shrec_model_names)
 
     shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
@@ -463,7 +444,7 @@ def get_dataset(num_shrec_models):
 
 def test_script(num_shrec_models):
 
-    print('Training on all YCB models + ' + str(num_shrec_models) + ' SHREC models:')
+    print('Training on 0 YCB models + ' + str(num_shrec_models) + ' SHREC models:')
 
     print('Step 1/4 -- Compiling Model')
     model = get_model()
@@ -488,7 +469,7 @@ if __name__ == "__main__":
             num_shrec_models = 25
         else:
             num_shrec_models = i * 50
-        SUB_DIR = 'all_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
+        SUB_DIR = 'no_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
 
         TEST_OUTPUT_DIR = RESULTS_DIR + SUB_DIR + "test_output/"
         os.makedirs(TEST_OUTPUT_DIR)
