@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# #test for screen
-# import matplotlib
-# matplotlib.use('Agg')
-
-from datasets import shrec_h5py_reconstruction_dataset
+from datasets import ycb_shrec_hdf5_reconstruction_dataset, shrec_h5py_reconstruction_dataset
 from datasets import shrec_h5py_holdout_dataset
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Flatten
@@ -36,7 +32,6 @@ def numpy_jaccard_similarity(a, b):
     '''
     Returns the number of pixels of the intersection of two voxel grids divided
     by the number of pixels in the union.
-    The inputs are expected to be numpy 5D ndarrays in BZCXY format.
     '''
     return np.mean(np.sum(a * b, axis=1) / np.sum((a + b) - a * b, axis=1))
 
@@ -80,7 +75,7 @@ def train(model, train_dataset, test_dataset):
         print 'Epoch: ' + str(e)
         PR.enable()
         train_iterator = train_dataset.iterator(batch_size=BATCH_SIZE,
-                                          num_batches=NB_TRAIN_BATCHES,
+                                          num_batches=NB_TEST_BATCHES,
                                           flatten_y=True)
 
         for b in range(NB_TRAIN_BATCHES):
@@ -91,10 +86,10 @@ def train(model, train_dataset, test_dataset):
                 loss_file.write(str(loss) + '\n')
 
         test_iterator1 = train_dataset.iterator(batch_size=BATCH_SIZE,
-                                         num_batches=NB_TEST_BATCHES,
+                                         num_batches=NB_TRAIN_BATCHES,
                                          flatten_y=True)
         test_iterator2 = test_dataset.iterator(batch_size=BATCH_SIZE,
-                                         num_batches=NB_TEST_BATCHES,
+                                         num_batches=NB_TRAIN_BATCHES,
                                          flatten_y=True)
 
         average_error = 0
@@ -180,16 +175,9 @@ def test(model, train_dataset, test_dataset, weights_filepath, epoch=-1):
 
     model.load_weights(weights_filepath)
 
-    if epoch == -1:
-        base_dir = 'final/'
-    else:
-        base_dir = 'epoch_' + str(epoch) + '/'
-
-    sub_dir = base_dir + 'trained_views/'
-    os.makedirs(TEST_OUTPUT_DIR + sub_dir)
     train_iterator = train_dataset.iterator(batch_size=BATCH_SIZE,
                                       num_batches=NB_TEST_BATCHES,
-                                      flatten_y=False)
+                                      flatten_y=True)
 
     batch_x, batch_y = train_iterator.next(train=1)
 
@@ -371,6 +359,28 @@ def get_dataset(num_shrec_models):
     :return: an hdf5 dataset
     """
 
+    ycb_models_dir = '/srv/data/shape_completion_data/ycb/'
+    ycb_model_names = ['black_and_decker_lithium_drill_driver',
+                   'block_of_wood_6in',
+                   'blue_wood_block_1inx1in',
+                   'brine_mini_soccer_ball',
+                   'campbells_condensed_tomato_soup',
+                   'cheerios_14oz',
+                   'clorox_disinfecting_wipes_35',
+                   'comet_lemon_fresh_bleach',
+                   'domino_sugar_1lb',
+                   'frenchs_classic_yellow_mustard_14oz',
+                   'melissa_doug_farm_fresh_fruit_banana',
+                   'melissa_doug_farm_fresh_fruit_lemon',
+                   'morton_salt_shaker',
+                   'play_go_rainbow_stakin_cups_1_yellow',
+                   'play_go_rainbow_stakin_cups_2_orange',
+                   'pringles_original',
+                   # 'red_metal_cup_white_speckles',
+                   'rubbermaid_ice_guard_pitcher_blue',
+                   'soft_scrub_2lb_4oz',
+                   'sponge_with_textured_cover']
+
     shrec_models_dir = '/srv/data/shape_completion_data/shrec/train_h5/'
     shrec_model_names = ['D00881', 'D00866', 'D01122', 'D00913', 'D00983',
                          'D00069', 'D00094', 'D01199', 'D00804', 'D00345',
@@ -424,65 +434,66 @@ def get_dataset(num_shrec_models):
                          'D00247', 'D01027', 'D00642', 'D00797', 'D00587']
 
     shrec_model_names = shrec_model_names[0:num_shrec_models]
-    train_dataset = shrec_h5py_reconstruction_dataset.ShrecReconstructionDataset(
+    dataset = ycb_shrec_hdf5_reconstruction_dataset.YcbShrecReconstructionDataset(
+        ycb_models_dir, ycb_model_names,
         shrec_models_dir, shrec_model_names)
 
-    shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
-    shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
-                              'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
-                              'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
-                              'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
-                              'D00786', 'D00770', 'D00849', 'D01106', 'D00470',
-                              'D00220', 'D00712', 'D01047', 'D00681', 'D00400',
-                              'D00662', 'D00928', 'D00940', 'D00313', 'D00502']
-    test_dataset = shrec_h5py_holdout_dataset.ShrecHoldoutDataset(
-        shrec_test_models_dir,
-        shrec_test_model_names)
+    # shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
+    # shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
+    #                           'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
+    #                           'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
+    #                           'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
+    #                           'D00786', 'D00770', 'D00849', 'D01106', 'D00470',
+    #                           'D00220', 'D00712', 'D01047', 'D00681', 'D00400',
+    #                           'D00662', 'D00928', 'D00940', 'D00313', 'D00502']
+    # dataset = shrec_h5py_reconstruction_dataset.ShrecReconstructionDataset(
+    #     shrec_models_dir, shrec_model_names)
 
-    return train_dataset, test_dataset
+    return dataset
 
 
 def test_script(num_shrec_models):
 
-    print('Training on 0 YCB models + ' + str(num_shrec_models) + ' SHREC models:')
+    print('Testing on all YCB models + ' + str(num_shrec_models) + ' SHREC models:')
 
     print('Step 1/4 -- Compiling Model')
     model = get_model()
     print('Step 2/4 -- Loading Dataset')
-    train_dataset, test_dataset = get_dataset(num_shrec_models)
+    dataset = get_dataset(num_shrec_models)
     print('Step 3/4 -- Training Model')
     train(model, train_dataset, test_dataset)
     print('Step 4/4 -- Testing Model')
-    test(model, train_dataset, test_dataset, BEST_WEIGHT_FILE, -1)
+    test(model, dataset, BEST_WEIGHT_FILE, -1)
 
 
 if __name__ == "__main__":
 
-    RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
-    os.makedirs(RESULTS_DIR)
+    #RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
+    RESULTS_DIR = 'results/y15_m12_d02_h20_m03_ycb_and_shrec/'
+    #os.makedirs(RESULTS_DIR)
 
     # save this script so we can call load model to get this model again later.
-    shutil.copy2(__file__, RESULTS_DIR + __file__)
+    #shutil.copy2(__file__, RESULTS_DIR + __file__)
 
     for i in range(6):
         if i == 0:
             num_shrec_models = 25
         else:
             num_shrec_models = i * 50
-        SUB_DIR = 'no_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
+        SUB_DIR = 'all_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
 
-        TEST_OUTPUT_DIR = RESULTS_DIR + SUB_DIR + "test_output/"
-        os.makedirs(TEST_OUTPUT_DIR)
-        LOSS_FILE = RESULTS_DIR + SUB_DIR + 'loss.txt'
-        ERROR_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_trained_views.txt'
-        ERROR_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_holdout_views.txt'
-        ERROR_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'cross_entropy_holdout_models.txt'
-        JACCARD_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_trained_views.txt'
-        JACCARD_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_views.txt'
-        JACCARD_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_models.txt'
+        #TEST_OUTPUT_DIR = RESULTS_DIR + SUB_DIR + "test_output/"
+        #os.makedirs(TEST_OUTPUT_DIR)
+        #LOSS_FILE = RESULTS_DIR + SUB_DIR + 'loss.txt'
+        #ERROR_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_trained_views.txt'
+        #ERROR_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'cross_entropy_err_holdout_views.txt'
+        #ERROR_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'cross_entropy_holdout_models.txt'
+        #JACCARD_TRAINED_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_trained_views.txt'
+        #JACCARD_HOLDOUT_VIEWS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_views.txt'
+        #JACCARD_HOLDOUT_MODELS = RESULTS_DIR + SUB_DIR + 'jaccard_err_holdout_models.txt'
         CURRENT_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'current_weights.h5'
         BEST_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'best_weights.h5'
-        PROFILE_FILE = RESULTS_DIR + SUB_DIR + 'profile.txt'
+        #PROFILE_FILE = RESULTS_DIR + SUB_DIR + 'profile.txt'
 
         test_script(num_shrec_models)
 

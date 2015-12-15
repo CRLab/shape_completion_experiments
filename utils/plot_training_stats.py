@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 
-def plot_stat(stat_files, title):
+def plot_stat(stat_files, title, save_file):
     plt.title(title)
     colors = ['b', 'g', 'r', 'c', 'm', 'y']
     for i, stat_file in enumerate(stat_files):
@@ -13,6 +13,7 @@ def plot_stat(stat_files, title):
         print color + ': ' + os.path.split(os.path.split(stat_file)[0])[1]
         stat = np.loadtxt(stat_file)
         plt.plot(range(len(stat)), stat, color)
+    plt.savefig(save_file)
     plt.show()
     print ''
 
@@ -35,9 +36,9 @@ def main():
             jaccard_holdout_models.append(results_dir + dir_name + '/jaccard_err_holdout_models.txt')
 
     print ''
-    plot_stat(jaccard_trained_views, 'trained_views')
-    plot_stat(jaccard_holdout_views, 'holdout_views')
-    plot_stat(jaccard_holdout_models, 'holdout_models')
+    plot_stat(jaccard_trained_views, 'trained_views', results_dir + 'jaccard_err_trained_views.png')
+    plot_stat(jaccard_holdout_views, 'holdout_views', results_dir + 'jaccard_err_holdout_views.png')
+    plot_stat(jaccard_holdout_models, 'holdout_models', results_dir + 'jaccard_err_holdout_models.png')
 
 
 if __name__ == "__main__":
