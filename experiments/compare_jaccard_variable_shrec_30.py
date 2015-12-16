@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from datasets import ycb_shrec_hdf5_reconstruction_dataset
+from datasets import shrec_h5py_reconstruction_dataset
 from datasets import shrec_h5py_holdout_dataset
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Flatten
@@ -275,8 +275,7 @@ def get_dataset(num_shrec_models):
                          'D00247', 'D01027', 'D00642', 'D00797', 'D00587']
 
     shrec_model_names = shrec_model_names[0:num_shrec_models]
-    train_dataset = ycb_shrec_hdf5_reconstruction_dataset.YcbShrecReconstructionDataset(
-        ycb_models_dir, ycb_model_names,
+    train_dataset = shrec_h5py_reconstruction_dataset.ShrecReconstructionDataset(
         shrec_models_dir, shrec_model_names)
 
     shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
@@ -335,7 +334,7 @@ if __name__ == "__main__":
         BEST_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'best_weights.h5'
         #PROFILE_FILE = RESULTS_DIR + SUB_DIR + 'profile.txt'
         RESULTS_FILE = RESULTS_DIR + 'jaccard_comparisons.txt'
-        F = open(RESULTS_FILE, 'w')
+        F = open(RESULTS_FILE, 'w');
         F.write('Folder: ' + RESULTS_DIR + '\n\n')
 
         test_script(num_shrec_models)
