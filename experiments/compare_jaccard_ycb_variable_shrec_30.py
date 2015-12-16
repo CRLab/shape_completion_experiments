@@ -16,7 +16,7 @@ import StringIO
 import time
 import shutil
 import numpy as np
-import mul
+from operator import mul
 
 PR = cProfile.Profile()
 
@@ -55,6 +55,7 @@ def compute_jaccard_similarities(model, train_dataset, test_dataset, weights_fil
     jaccard_pred_holdout_models = 0.0
     jaccard_base_holdout_models = 0.0
     for b in range(NB_BATCHES):
+        print('Batch No.: ', b)
         X_batch, Y_batch = test_iterator1.next(train=1)
         error = model.test(X_batch, Y_batch)
         prediction = model._predict(X_batch)
@@ -93,12 +94,12 @@ def compute_jaccard_similarities(model, train_dataset, test_dataset, weights_fil
     jaccard_pred_holdout_models /= NB_BATCHES
     jaccard_base_holdout_models /= NB_BATCHES
 
-    F.write('Jaccard Predicted Trained Views: ', jaccard_pred_trained_views, '\n')
-    F.write('Jaccard Base Trained Views: ', jaccard_base_trained_views, '\n')
-    F.write('Jaccard Predicted Holdout Views: ', jaccard_pred_holdout_views, '\n')
-    F.write('Jaccard Base Holdout Views: ', jaccard_base_holdout_views, '\n')
-    F.write('Jaccard Predicted Holdout Models: ', jaccard_pred_holdout_models, '\n')
-    F.write('Jaccard Base Holdout Models: ', jaccard_base_holdout_models, '\n')
+    F.write('Jaccard Predicted Trained Views: ' + str(jaccard_pred_trained_views) + '\n')
+    F.write('Jaccard Base Trained Views: ' + str(jaccard_base_trained_views) + '\n')
+    F.write('Jaccard Predicted Holdout Views: ' + str(jaccard_pred_holdout_views) + '\n')
+    F.write('Jaccard Base Holdout Views: ' + str(jaccard_base_holdout_views) + '\n')
+    F.write('Jaccard Predicted Holdout Models: ' + str(jaccard_pred_holdout_models) + '\n')
+    F.write('Jaccard Base Holdout Models: ' + str(jaccard_base_holdout_models) + '\n')
 
 
 def get_model():
@@ -286,7 +287,7 @@ def get_dataset(num_shrec_models):
                               'D00786', 'D00770', 'D00849', 'D01106', 'D00470',
                               'D00220', 'D00712', 'D01047', 'D00681', 'D00400',
                               'D00662', 'D00928', 'D00940', 'D00313', 'D00502']
-    test_dataset = shrec_h5py_reconstruction_dataset.ShrecReconstructionDataset(
+    test_dataset = shrec_h5py_holdout_dataset.ShrecHoldoutDataset(
         shrec_models_dir, shrec_model_names)
 
     return train_dataset, test_dataset
