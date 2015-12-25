@@ -17,6 +17,7 @@ import time
 import shutil
 import numpy as np
 from operator import mul
+import math
 
 PR = cProfile.Profile()
 
@@ -31,6 +32,11 @@ def numpy_jaccard_similarity(a, b):
     Returns the number of pixels of the intersection of two voxel grids divided
     by the number of pixels in the union.
     '''
+
+    # if math.isnan(np.mean(np.sum(a * b, axis=1) / np.sum((a + b) - a * b, axis=1))):
+    #     import IPython
+    #     IPython.embed()
+
     return np.mean(np.sum(a * b, axis=1) / np.sum((a + b) - a * b, axis=1))
 
 
@@ -279,7 +285,7 @@ def get_dataset(num_shrec_models):
         shrec_models_dir, shrec_model_names)
 
     shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
-    shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
+    shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00282', 'D00512',
                               'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
                               'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
                               'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
@@ -308,7 +314,7 @@ def test_script(num_shrec_models):
 if __name__ == "__main__":
 
     #RESULTS_DIR = 'results/' + time.strftime("y%y_m%m_d%d_h%H_m%M") + "/"
-    RESULTS_DIR = 'results/y15_m12_d02_h20_m03_ycb_and_shrec/'
+    RESULTS_DIR = 'results/y15_m12_d06_h15_m01_only_shrec/'
     #os.makedirs(RESULTS_DIR)
 
     # save this script so we can call load model to get this model again later.
@@ -319,7 +325,7 @@ if __name__ == "__main__":
             num_shrec_models = 25
         else:
             num_shrec_models = i * 50
-        SUB_DIR = 'all_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
+        SUB_DIR = 'no_ycb_' + '%03d'%(num_shrec_models) + '_shrec/'
 
         #TEST_OUTPUT_DIR = RESULTS_DIR + SUB_DIR + "test_output/"
         #os.makedirs(TEST_OUTPUT_DIR)
@@ -334,7 +340,7 @@ if __name__ == "__main__":
         BEST_WEIGHT_FILE = RESULTS_DIR + SUB_DIR + 'best_weights.h5'
         #PROFILE_FILE = RESULTS_DIR + SUB_DIR + 'profile.txt'
         RESULTS_FILE = RESULTS_DIR + 'jaccard_comparisons.txt'
-        F = open(RESULTS_FILE, 'w');
+        F = open(RESULTS_FILE, 'a')
         F.write('Folder: ' + RESULTS_DIR + '\n\n')
 
         test_script(num_shrec_models)
