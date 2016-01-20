@@ -107,10 +107,18 @@ class ShrecHoldoutIterator(collections.Iterator):
 
 
 def main():
-    h5_dir = '/srv/data/shape_completion_data/shrec/h5/'
-    model_name = ['D00003']
+    h5_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
+    model_name = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
+                  'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
+                  'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
+                  'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
+                  'D00786', 'D00770', 'D00849', 'D01106', 'D00470',
+                  'D00220', 'D00712', 'D01047', 'D00681', 'D00400',
+                  'D00662', 'D00928', 'D00940', 'D00313', 'D00502']
     dataset = ShrecHoldoutDataset(h5_dir, model_name)
-    it = dataset.iterator(5)
+    it = dataset.iterator(batch_size=5,
+                          num_batches=100,
+                          flatten_y=True)
     it.next()
 
 if __name__ == "__main__":

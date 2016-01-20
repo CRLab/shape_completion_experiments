@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#test for screen
-import matplotlib
-matplotlib.use('Agg')
+# #test for screen
+# import matplotlib
+# matplotlib.use('Agg')
 
 from datasets import shrec_h5py_reconstruction_dataset
 from datasets import shrec_h5py_holdout_dataset
@@ -80,7 +80,7 @@ def train(model, train_dataset, test_dataset):
         print 'Epoch: ' + str(e)
         PR.enable()
         train_iterator = train_dataset.iterator(batch_size=BATCH_SIZE,
-                                          num_batches=NB_TEST_BATCHES,
+                                          num_batches=NB_TRAIN_BATCHES,
                                           flatten_y=True)
 
         for b in range(NB_TRAIN_BATCHES):
@@ -91,10 +91,10 @@ def train(model, train_dataset, test_dataset):
                 loss_file.write(str(loss) + '\n')
 
         test_iterator1 = train_dataset.iterator(batch_size=BATCH_SIZE,
-                                         num_batches=NB_TRAIN_BATCHES,
+                                         num_batches=NB_TEST_BATCHES,
                                          flatten_y=True)
         test_iterator2 = test_dataset.iterator(batch_size=BATCH_SIZE,
-                                         num_batches=NB_TRAIN_BATCHES,
+                                         num_batches=NB_TEST_BATCHES,
                                          flatten_y=True)
 
         average_error = 0
@@ -428,7 +428,7 @@ def get_dataset(num_shrec_models):
         shrec_models_dir, shrec_model_names)
 
     shrec_test_models_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
-    shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
+    shrec_test_model_names = ['D00152', 'D00966', 'D00748', 'D00282', 'D00512',
                               'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
                               'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
                               'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
