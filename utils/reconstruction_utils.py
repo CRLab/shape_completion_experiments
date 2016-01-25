@@ -486,3 +486,74 @@ def compile_and_get_theano_upsample_function(upsampling_factors, input_type='flo
         outputs=upsampling_operations,
     )
     return upsample_fn
+
+def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_sigma):
+    """
+    Returns a Theano function that upsamples or "unpools" its first input 3D tensor by
+    the provided upsampling factor, then applies a 3D Gaussian blur with blur standard
+    deviation equal to blur_sigma, then gets the elementwise maximum between this
+    result and the second input 3D tensor.
+    """
+    if blur_sigma == 0 or upsampling_factor < 1:
+        raise
+    # Make sure total kernel size is odd and that we have at least a 3-standard-deviation
+    # radius for the filter so that we cut the distribution off when it's already very small.
+    size = int(6*blur_sigma+1) if int(6*blur_sigma+1)%2 else int(6*blur_sigma) #61 when blur_sigma = 10
+    # Set k to be half the kernel size, without taking into account the middle pixel
+    k = int(size/2)
+    print('kernel size: ' + str(size))
+    
+    ## Prepare 1x1x(2k+1)x(2k+1)x(2k+1) 3D Gaussian blur kernel in numpy
+    ##  where dims are (# in?put channels, # out?put channels, height, width)
+    x = np.arange(-k,k+1)
+    y = np.arange(-k,k+1)
+    z = np.arange(-k,k+1)
+    X,Y,Z=np.meshgrid(x,y,z)
+    Gv = np.exp(-(X**2+Y**2+Z**2)/(2.0*blur_sigma**2))
+    Gv = (Gv/np.sum(Gv.reshape(-1))).astype(np.float32)
+    Gv = np.tile(Gv, (1, 1, 1, 1, 1))
+    
+    ## Turn kernel into Theano shared variable.
+    #G_kernel = theano.shared(Gv)
+    G_kernel = Gv
+    print("filter size: " + str(G_kernel.shape))
+    G_kernel = np.transpose(G_kernel, (0, 4, 1, 2, 3))
+    print("new filter size: " + str(G_kernel.shape))
+    #G_kernel = theano.printing.Print('G_kernel')(G_kernel)
+
+    ## Compile convolution function graph.
+    ### input predicted full occupancy grid for whole object.
+    input_1 = T.ftensor3()
+    M1 = T.shape_padleft(input_1, 2)
+    ### input occupancy grid for front of object.
+    input_2 = T.ftensor3()
+    M2 = T.shape_padleft(input_2, 2)
+    ### Apply upsampling to network output (Assumes BC12 image format)
+    R2 = M1.repeat(upsampling_factor, axis=2).repeat(upsampling_factor, axis=3).repeat(upsampling_factor, axis=4)
+    #R2 = theano.printing.Print('R2')(R2)
+    MM2 = M2 #.repeat(upsampling_factor, axis=2).repeat(upsampling_factor, axis=3).repeat(upsampling_factor, axis=4)
+    ### Apply Gaussian blur to upsampled image
+    #R3 = conv2d(R2, G_kernel, border_mode="full")
+    input_shape = R2.shape
+    output_shape = (input_shape[0], input_shape[1],
+                    input_shape[2] + 2*k,
+                    input_shape[3] + 2*k,
+                    input_shape[4] + 2*k)
+    R2_padded = output = T.zeros(output_shape, R2.dtype)
+    R2_padded = T.set_subtensor(R2_padded[:,:,k:-k, k:-k, k:-k], R2)
+    R2_padded = R2_padded.dimshuffle(0, 4, 1, 2, 3)
+    R3 = conv3d(R2_padded, G_kernel, border_mode="valid")
+    R3 = R3.dimshuffle(0, 2, 3, 4, 1)
+    #R3 = theano.printing.Print('R3')(R3)
+    ### Get subtensor so as to achieve 'same' border mode
+    R4 = R3 #R3[:, :, k:-k, k:-k, k:-k]
+    #R4 = theano.printing.Print('R4')(R4)
+    ### Combine blurred network output with visible surface occupancy grid through some sort of union operation
+    #R5 = R4 + 0*MM2 
+    #R5 = R4 + MM2 - R4 * MM2
+    R5 = T.maximum(R4, MM2)
+    upscale_blur_and_combine_fn = theano.function(
+        inputs=[input_1, input_2],
+        outputs=R5,
+    )
+    return upscale_blur_and_combine_fn
