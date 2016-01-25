@@ -8,7 +8,7 @@ import tf_conversions
 import PyKDL
 from off_utils.off_handler import OffHandler
 import math
-import pcl
+#import pcl
 
 
 def create_voxel_grid_around_point(points, patch_center, voxel_resolution=0.001,
@@ -310,6 +310,7 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
                               custom_scale=1, custom_offset=(0, 0, 0)):
     custom_offset = np.array(custom_offset).reshape(3, 1)
 
+    import pcl
     pc = np.asarray(pcl.load(single_view_pointcloud_filepath))
     pc = pc[:, 0:3]
 
