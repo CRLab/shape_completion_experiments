@@ -469,3 +469,21 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     else:
         raise NotImplementedError(
             "Invalid ternary voxel grid generation method requested.")
+
+def compile_and_get_theano_upsample_function(upsampling_factors, input_type='float32'):
+    """
+    Returns a Theano function that upsamples or "unpools" its input tensor by
+    the provided upsampling factors. The input tensor to the returned function
+    needs to have as many dimensions as upsampling_factors has elements.
+    """
+    input_tensor_type = T.TensorType(input_type, (0,)*len(upsampling_factors))
+    upsampling_input = input_tensor_type()
+    upsampling_operations = upsampling_input
+    for i, upsampling_factor in enumerate(upsampling_factors):
+        if upsampling_factor!=1:
+            upsampling_operations = upsampling_operations.repeat(upsampling_factor, axis=i)
+    upsample_fn = theano.function(
+        inputs=[upsampling_input],
+        outputs=upsampling_operations,
+    )
+    return upsample_fn
