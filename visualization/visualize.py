@@ -21,6 +21,9 @@ def visualize_3d(data, title=None, save_file=None):
         plt.title(title)
 
     if save_file:
+        # fig.show()
+        # import IPython
+        # IPython.embed()
         plt.savefig(save_file)
         plt.close('all')
     else:
@@ -76,6 +79,7 @@ def visualize_occupancygrid(data, title=None, save_file=None):
 
 # pc of shape (num_points, 3)
 def visualize_pointcloud(pc, subsample=False):
+    pc = np.copy(pc)
     if subsample:
         mask = np.random.rand(pc.shape[0])
         pc = pc[mask < .1]
@@ -88,6 +92,8 @@ def visualize_pointcloud(pc, subsample=False):
 
 
 def visualize_pointclouds(pc0, pc1, subsample0=False, subsample1=False):
+    pc0 = np.copy(pc0)
+    pcl = np.copy(pc1)
     if subsample0:
         mask = np.random.rand(pc0.shape[0])
         pc0 = pc0[mask < .005]
@@ -105,11 +111,16 @@ def visualize_pointclouds(pc0, pc1, subsample0=False, subsample1=False):
     fig.show()
 
 
-def visualize_batch_x(batch_x, i=0, title=None, save_file=None):
+def visualize_batch_x(batch_x, i=0, title=None, save_file=None, add_pts=False):
+    batch_x = np.copy(batch_x)
     # switch (b 2 c 0 1) to (b 0 1 2 c)
     b = batch_x.transpose(0, 3, 4, 1, 2)
     data = b[i, :, :, :, :]
-    print data.shape
+    if add_pts:
+        data[0,0,0,0] = 1
+        max_dim = data.shape[0]
+        data[max_dim-1,max_dim-1,max_dim-1,0] = 1
+    # print data.shape
     visualize_3d(data, title, save_file)
 
 

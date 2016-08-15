@@ -4,46 +4,56 @@
 import numpy as np
 import theano
 import theano.tensor as T
+from theano.tensor.nnet.conv3d2d import conv3d
 import binvox_rw
-import visualization.visualize as viz
 import tf_conversions
 import PyKDL
-from off_utils.off_handler import OffHandler
 import math
-#import pcl
+
+OLD_FIT = False
+PERCENT_PATCH_SIZE = (4.0/5.0)
+
+if OLD_FIT:
+    PERCENT_PATCH_SIZE = (2.0/3.0)
+
+PERCENT_X = 0.5
+PERCENT_Y = 0.5
+PERCENT_Z = 0.45
 
 
-def create_voxel_grid_around_point(points, patch_center, voxel_resolution=0.001,
-                                   num_voxels_per_dim=72):
-    voxel_grid = np.zeros((num_voxels_per_dim,
-                           num_voxels_per_dim,
-                           num_voxels_per_dim,
-                           1))
+def get_voxel_resolution(pc, patch_size):
+    assert pc.shape[1] == 3
+    min_x = pc[:, 0].min()
+    min_y = pc[:, 1].min()
+    min_z = pc[:, 2].min()
+    max_x = pc[:, 0].max()
+    max_y = pc[:, 1].max()
+    max_z = pc[:, 2].max()
 
-    centered_scaled_points = np.floor(
-        (points - patch_center +
-         ((num_voxels_per_dim / 2 - 1) * voxel_resolution)) / voxel_resolution)
+    max_dim = max((max_x - min_x),
+                  (max_y - min_y),
+                  (max_z - min_z))
 
-    mask = centered_scaled_points.max(axis=1) < num_voxels_per_dim
-    centered_scaled_points = centered_scaled_points[mask]
+    voxel_resolution = (1.0*max_dim) / (PERCENT_PATCH_SIZE * patch_size)
+    return voxel_resolution
 
-    if centered_scaled_points.shape[0] == 0:
-        return voxel_grid
 
-    mask = centered_scaled_points.min(axis=1) > 0
-    centered_scaled_points = centered_scaled_points[mask]
+def get_center(pc):
 
-    if centered_scaled_points.shape[0] == 0:
-        return voxel_grid
+    assert pc.shape[1] == 3
+    min_x = pc[:, 0].min()
+    min_y = pc[:, 1].min()
+    min_z = pc[:, 2].min()
+    max_x = pc[:, 0].max()
+    max_y = pc[:, 1].max()
+    max_z = pc[:, 2].max()
 
-    csp_int = centered_scaled_points.astype(int)
+    center = (min_x + (max_x - min_x) / 2.0,
+              min_y + (max_y - min_y) / 2.0,
+              min_z + (max_z - min_z) / 2.0)
 
-    mask = (csp_int[:, 0], csp_int[:, 1], csp_int[:, 2],
-            np.zeros((csp_int.shape[0]), dtype=int))
+    return center
 
-    voxel_grid[mask] = 1
-
-    return voxel_grid
 
 def create_voxel_grid_around_point_scaled(points, patch_center,
                                           voxel_resolution, num_voxels_per_dim,
@@ -51,7 +61,7 @@ def create_voxel_grid_around_point_scaled(points, patch_center,
     voxel_grid = np.zeros((num_voxels_per_dim,
                            num_voxels_per_dim,
                            num_voxels_per_dim,
-                           1))
+                           1), dtype=np.float32)
 
     centered_scaled_points = np.floor(
         (points - np.array(patch_center) + np.array(
@@ -77,6 +87,7 @@ def create_voxel_grid_around_point_scaled(points, patch_center,
     voxel_grid[mask] = 1
 
     return voxel_grid
+
 
 def map_pointclouds_to_world(pc, non_zero_arr, model_pose):
     # this works, to reorient pointcloud apply the model_pose transform, this is
@@ -106,6 +117,7 @@ def map_pointclouds_to_world(pc, non_zero_arr, model_pose):
     # rotate point cloud by same rotation that model went through
     pc2_out = np.dot(model_pose.T, pc2_out)
     return pc2_out, non_zero_arr1
+
 
 def map_pointclouds_to_camera_frame(pc, non_zero_arr, model_pose):
     # apply the model_pose transform, this is the rotation that was applied to
@@ -138,9 +150,14 @@ def map_pointclouds_to_camera_frame(pc, non_zero_arr, model_pose):
 
     return pc2_out, non_zero_arr1
 
-def build_training_example(binvox_file_path, model_pose_filepath,
-                           single_view_pointcloud_filepath, patch_size,
-                           custom_scale=1, custom_offset=(0, 0, 0)):
+
+def build_training_example_scaled(binvox_file_path,
+                                  model_pose_filepath,
+                                  single_view_pointcloud_filepath,
+                                  patch_size,
+                                  custom_scale=1,
+                                  custom_offset=(0, 0, 0)):
+
     custom_offset = np.array(custom_offset).reshape(3, 1)
 
     pc = np.load(single_view_pointcloud_filepath)
@@ -172,11 +189,6 @@ def build_training_example(binvox_file_path, model_pose_filepath,
                            np.array(dims).reshape(3, 1) * binvox_scale
     non_zero_arr[0:3, :] = non_zero_arr[0:3, :] + binvox_offset
 
-    # oh = OffHandler()
-    # oh.read("/home/jvarley/.gazebo/models/D00532/D00532.off")
-    # viz.visualize_pointclouds(oh.vertices, non_zero_arr.T[:, 0:3], False,
-    #                           True)
-
     # go from off to mesh
     non_zero_arr[0:3, :] = non_zero_arr[0:3, :] * custom_scale
     non_zero_arr[0:3, :] = non_zero_arr[0:3, :] - custom_offset
@@ -185,118 +197,33 @@ def build_training_example(binvox_file_path, model_pose_filepath,
     # standing up at the origin.
     # pc2_out, non_zero_arr1 = map_pointclouds_to_world(pc, non_zero_arr,
     #                                                   model_pose)
-    pc2_out, non_zero_arr1 = map_pointclouds_to_camera_frame(
-        pc, non_zero_arr, model_pose)
-
-    min_x = pc2_out[0, :].min()
-    min_y = pc2_out[1, :].min()
-    min_z = pc2_out[2, :].min()
-
-    max_x = pc2_out[0, :].max()
-    max_y = pc2_out[1, :].max()
-    max_z = pc2_out[2, :].max()
-
-    center = (min_x + (max_x - min_x) / 2.0, min_y + (max_y - min_y) / 2.0,
-              min_z + (max_z - min_z) / 2.0)
-
-    # now non_zero_arr and pc points are in the same frame of reference.
-    # since the images were captured with the model at the origin
-    # we can just compute an occupancy grid centered around the origin.
-    x = create_voxel_grid_around_point(pc2_out[0:3, :].T, center,
-                                       voxel_resolution=.015,
-                                       num_voxels_per_dim=patch_size)
-    y = create_voxel_grid_around_point(non_zero_arr1.T[:, 0:3], center,
-                                       voxel_resolution=.015,
-                                       num_voxels_per_dim=patch_size)
-
-    # viz.visualize_3d(x)
-    # viz.visualize_3d(y)
-    # viz.visualize_pointcloud(pc2_out[0:3, :].T)
-    # viz.visualize_pointclouds(pc2_out.T, non_zero_arr1.T[:, 0:3], False, True)
-    # viz.visualize_pointclouds(x, y, False, False)
-    # import IPython
-    # IPython.embed()
-
-    return x, y
-
-def build_training_example_scaled(binvox_file_path, model_pose_filepath,
-                                  single_view_pointcloud_filepath, patch_size,
-                                  custom_scale=1, custom_offset=(0, 0, 0)):
-    custom_offset = np.array(custom_offset).reshape(3, 1)
-
-    pc = np.load(single_view_pointcloud_filepath)
-    pc = pc[:, 0:3]
-    model_pose = np.load(model_pose_filepath)
-    with open(binvox_file_path, 'rb') as f:
-        model = binvox_rw.read_as_3d_array(f)
-
-    points = model.data
-    binvox_scale = model.scale
-    binvox_offset = model.translate
-    dims = model.dims
-
-    non_zero_points = points.nonzero()
-
-    # get numpy array of nonzero points
-    num_points = len(non_zero_points[0])
-    non_zero_arr = np.zeros((4, num_points))
-
-    non_zero_arr[0] = non_zero_points[0]
-    non_zero_arr[1] = non_zero_points[1]
-    non_zero_arr[2] = non_zero_points[2]
-    non_zero_arr[3] = 1.0
-
-    binvox_offset = np.array(binvox_offset).reshape(3, 1)
-
-    # go from binvox to off original mesh
-    non_zero_arr[0:3, :] = non_zero_arr[0:3, :] / \
-                           np.array(dims).reshape(3, 1) * binvox_scale
-    non_zero_arr[0:3, :] = non_zero_arr[0:3, :] + binvox_offset
-
-    # oh = OffHandler()
-    # oh.read("/home/jvarley/.gazebo/models/D00532/D00532.off")
-    # viz.visualize_pointclouds(oh.vertices, non_zero_arr.T[:, 0:3], False,
-    #                           True)
-
-    # go from off to mesh
-    non_zero_arr[0:3, :] = non_zero_arr[0:3, :] * custom_scale
-    non_zero_arr[0:3, :] = non_zero_arr[0:3, :] - custom_offset
-
-    # this is an easier task, the y value is always the same. i.e the model
-    # standing up at the origin.
-    # pc2_out, non_zero_arr1 = map_pointclouds_to_world(pc, non_zero_arr,
-    #                                                   model_pose)
-    pc2_out, non_zero_arr1 = map_pointclouds_to_camera_frame(pc, non_zero_arr,
+    pc2_out, non_zero_arr1 = map_pointclouds_to_camera_frame(pc,
+                                                             non_zero_arr,
                                                              model_pose)
 
-    min_x = pc2_out[0, :].min()
-    min_y = pc2_out[1, :].min()
-    min_z = pc2_out[2, :].min()
+    pc2_out = pc2_out[0:3, :].T
+    center = get_center(pc2_out)
+    voxel_resolution = get_voxel_resolution(pc2_out, patch_size)
 
-    max_x = pc2_out[0, :].max()
-    max_y = pc2_out[1, :].max()
-    max_z = pc2_out[2, :].max()
-
-    center = (min_x + (max_x - min_x) / 2.0, min_y + (max_y - min_y) / 2.0,
-              min_z + (max_z - min_z) / 2.0)
-
-    voxel_resolution = max((max_x - min_x), (max_y - min_y),
-                           (max_z - min_z)) / ((2.0 / 3.0) * patch_size)
     print('Voxel Res = ' + str(voxel_resolution))
+
+    pc_center_in_voxel_grid = (patch_size*PERCENT_X, patch_size*PERCENT_Y, patch_size*PERCENT_Z)
+    if OLD_FIT:
+        pc_center_in_voxel_grid = ( 15, 15, 11)
 
     # now non_zero_arr and pc points are in the same frame of reference.
     # since the images were captured with the model at the origin
     # we can just compute an occupancy grid centered around the origin.
-    x = create_voxel_grid_around_point_scaled(pc2_out[0:3, :].T, center,
+    x = create_voxel_grid_around_point_scaled(pc2_out, center,
                                               voxel_resolution,
                                               num_voxels_per_dim=patch_size,
-                                              pc_center_in_voxel_grid=(
-                                                  15.0, 15.0, 11.0))
-    y = create_voxel_grid_around_point_scaled(non_zero_arr1.T[:, 0:3], center,
+                                              pc_center_in_voxel_grid=pc_center_in_voxel_grid)
+
+    y = create_voxel_grid_around_point_scaled(non_zero_arr1.T[:, 0:3],
+                                              center,
                                               voxel_resolution,
                                               num_voxels_per_dim=patch_size,
-                                              pc_center_in_voxel_grid=(
-                                                  15.0, 15.0, 11.0))
+                                              pc_center_in_voxel_grid=pc_center_in_voxel_grid)
 
     # viz.visualize_3d(x)
     # viz.visualize_3d(y)
@@ -308,34 +235,24 @@ def build_training_example_scaled(binvox_file_path, model_pose_filepath,
 
     return x, y
 
-def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
-                              custom_scale=1, custom_offset=(0, 0, 0)):
+
+def build_test_example_scaled(single_view_pointcloud_filepath,
+                              patch_size,
+                              custom_scale=1,
+                              custom_offset=(0, 0, 0)):
+
     custom_offset = np.array(custom_offset).reshape(3, 1)
 
     import pcl
     pc = np.asarray(pcl.load(single_view_pointcloud_filepath))
     pc = pc[:, 0:3]
 
-    # min_x = pc[0, :].min()
-    # min_y = pc[1, :].min()
-    # min_z = pc[2, :].min()
-    # max_x = pc[0, :].max()
-    # max_y = pc[1, :].max()
-    # max_z = pc[2, :].max()
+    center = get_center(pc)
+    voxel_resolution = get_voxel_resolution(pc, patch_size)
 
-    min_x = pc[:, 0].min()
-    min_y = pc[:, 1].min()
-    min_z = pc[:, 2].min()
-    max_x = pc[:, 0].max()
-    max_y = pc[:, 1].max()
-    max_z = pc[:, 2].max()
-
-    center = (min_x + (max_x - min_x) / 2.0, min_y + (max_y - min_y) / 2.0,
-              min_z + (max_z - min_z) / 2.0)
-
-    voxel_resolution = max((max_x - min_x), (max_y - min_y),
-                           (max_z - min_z)) / ((2.0 / 3.0) * patch_size)
-    print('Voxel Res = ' + str(voxel_resolution))
+    pc_center_in_voxel_grid = (patch_size*PERCENT_X, patch_size*PERCENT_Y, patch_size*PERCENT_Z)
+    if OLD_FIT:
+        pc_center_in_voxel_grid = (15, 15, 11)
 
     # now non_zero_arr and pc points are in the same frame of reference.
     # since the images were captured with the model at the origin
@@ -343,8 +260,7 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
     x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center,
                                               voxel_resolution,
                                               num_voxels_per_dim=patch_size,
-                                              pc_center_in_voxel_grid=(
-                                                  15.0, 15.0, 11.0))
+                                              pc_center_in_voxel_grid=pc_center_in_voxel_grid)
 
     # viz.visualize_3d(x)
     # viz.visualize_pointcloud(pc[:, 0:3])
@@ -356,63 +272,51 @@ def build_test_example_scaled(single_view_pointcloud_filepath, patch_size,
     return x
 
 
-def build_test_from_pc_scaled(pc, patch_size, custom_scale=1,
+def build_test_from_pc_scaled(pc,
+                              patch_size,
+                              custom_scale=1,
                               custom_offset=(0, 0, 0)):
-    custom_offset = np.array(custom_offset).reshape(3, 1)
 
-    min_x = pc[:, 0].min()
-    min_y = pc[:, 1].min()
-    min_z = pc[:, 2].min()
-    max_x = pc[:, 0].max()
-    max_y = pc[:, 1].max()
-    max_z = pc[:, 2].max()
+    center = get_center(pc)
+    voxel_resolution = get_voxel_resolution(pc, patch_size)
 
-    center = (min_x + (max_x - min_x) / 2.0, min_y + (max_y - min_y) / 2.0,
-              min_z + (max_z - min_z) / 2.0)
+    pc_center_in_voxel_grid = (patch_size*PERCENT_X, patch_size*PERCENT_Y, patch_size*PERCENT_Z)
+    if OLD_FIT:
+        pc_center_in_voxel_grid = (15, 15, 11)
 
-    voxel_resolution = max((max_x - min_x), (max_y - min_y),
-                           (max_z - min_z)) / ((2.0 / 3.0) * patch_size)
-    print('Voxel Res = ' + str(voxel_resolution))
-
-    #now non_zero_arr and pc points are in the same frame of reference.
-    #since the images were captured with the model at the origin
-    #we can just compute an occupancy grid centered around the origin.
-    pc_center_in_voxel_grid=(15.0, 15.0, 11.0)
     x = create_voxel_grid_around_point_scaled(
-        pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=patch_size,
+        pc[:, 0:3],
+        center,
+        voxel_resolution,
+        num_voxels_per_dim=patch_size,
         pc_center_in_voxel_grid=pc_center_in_voxel_grid)
-
-    # viz.visualize_3d(x)
-    # viz.visualize_pointcloud(pc[:, 0:3])
-    # import IPython
-    # IPython.embed()
-    # import time
-    # time.sleep(1)
 
     offset = np.array(center) - np.array(pc_center_in_voxel_grid) * voxel_resolution
 
     return x, voxel_resolution, offset
 
-def build_high_res_voxel_grid(pc, scale, patch_size, custom_scale=1, custom_offset=(0, 0, 0)):
-    custom_offset = np.array(custom_offset).reshape(3,1)
 
-    min_x = pc[:, 0].min()
-    min_y = pc[:, 1].min()
-    min_z = pc[:, 2].min()
-    max_x = pc[:, 0].max()
-    max_y = pc[:, 1].max()
-    max_z = pc[:, 2].max()
-
-    center = (min_x + (max_x-min_x)/2.0, min_y + (max_y-min_y)/2.0, min_z + (max_z-min_z)/2.0)
-
-    voxel_resolution = max((max_x - min_x), (max_y - min_y), (max_z - min_z)) / ((2.0/3.0) * scale * patch_size)
-    print('Voxel Res = ' + str(voxel_resolution))
+def build_high_res_voxel_grid(pc,
+                              scale,
+                              patch_size,
+                              custom_scale=1,
+                              custom_offset=(0, 0, 0)):
+    center = get_center(pc)
+    voxel_resolution = get_voxel_resolution(pc, patch_size)
+    voxel_resolution /= scale
 
     #now non_zero_arr and pc points are in the same frame of reference.
     #since the images were captured with the model at the origin
     #we can just compute an occupancy grid centered around the origin.
-    pc_center_in_voxel_grid = scale * np.array((15.0, 15.0, 11.0))
-    x = create_voxel_grid_around_point_scaled(pc[:, 0:3], center, voxel_resolution, num_voxels_per_dim=scale * patch_size, pc_center_in_voxel_grid=pc_center_in_voxel_grid)
+    pc_center_in_voxel_grid = ( patch_size*PERCENT_X, patch_size*PERCENT_Y, patch_size*PERCENT_Z)
+    if OLD_FIT:
+        pc_center_in_voxel_grid = ( 15, 15, 11)
+
+    x = create_voxel_grid_around_point_scaled(pc[:, 0:3],
+                                              center,
+                                              voxel_resolution,
+                                              num_voxels_per_dim=scale * patch_size,
+                                              pc_center_in_voxel_grid=pc_center_in_voxel_grid)
 
     #viz.visualize_3d(x)
     #viz.visualize_pointcloud(pc[:, 0:3])
@@ -425,8 +329,10 @@ def build_high_res_voxel_grid(pc, scale, patch_size, custom_scale=1, custom_offs
 
     return x, voxel_resolution, offset
 
+
 def get_occluded_voxel_grid(binary_voxel_grid, method='simple'):
     return get_ternary_voxel_grid(binary_voxel_grid, method) == 2
+
 
 def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
     """
@@ -472,6 +378,7 @@ def get_ternary_voxel_grid(binary_voxel_grid, method='simple'):
         raise NotImplementedError(
             "Invalid ternary voxel grid generation method requested.")
 
+
 def compile_and_get_theano_upsample_function(upsampling_factors, input_type='float32'):
     import theano.tensor as T
     import theano
@@ -492,7 +399,8 @@ def compile_and_get_theano_upsample_function(upsampling_factors, input_type='flo
     )
     return upsample_fn
 
-def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_sigma):
+
+def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_sigma, kernal_scale):
     """
     Returns a Theano function that upsamples or "unpools" its first input 3D tensor by
     the provided upsampling factor, then applies a 3D Gaussian blur with blur standard
@@ -503,10 +411,12 @@ def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_
         raise
     # Make sure total kernel size is odd and that we have at least a 3-standard-deviation
     # radius for the filter so that we cut the distribution off when it's already very small.
-    size = int(6*blur_sigma+1) if int(6*blur_sigma+1)%2 else int(6*blur_sigma) #61 when blur_sigma = 10
+    size = int(kernal_scale*blur_sigma+1) if int(kernal_scale*blur_sigma+1)%2 else int(kernal_scale*blur_sigma) #kernal_scale*10 when blur_sigma = 10
     # Set k to be half the kernel size, without taking into account the middle pixel
     k = int(size/2)
     print('kernel size: ' + str(size))
+    print('blur sigma: ' + str(blur_sigma))
+    print('upsampling factor: ' + str(upsampling_factor))
     
     ## Prepare 1x1x(2k+1)x(2k+1)x(2k+1) 3D Gaussian blur kernel in numpy
     ##  where dims are (# in?put channels, # out?put channels, height, width)
@@ -536,29 +446,31 @@ def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_
     ### Apply upsampling to network output (Assumes BC12 image format)
     R2 = M1.repeat(upsampling_factor, axis=2).repeat(upsampling_factor, axis=3).repeat(upsampling_factor, axis=4)
     #R2 = theano.printing.Print('R2')(R2)
-    MM2 = M2 #.repeat(upsampling_factor, axis=2).repeat(upsampling_factor, axis=3).repeat(upsampling_factor, axis=4)
+    MM2 = M2#.repeat(upsampling_factor, axis=2).repeat(upsampling_factor, axis=3).repeat(upsampling_factor, axis=4)
     ### Apply Gaussian blur to upsampled image
     #R3 = conv2d(R2, G_kernel, border_mode="full")
+    R2 = T.maximum(R2, MM2)
     input_shape = R2.shape
     output_shape = (input_shape[0], input_shape[1],
-                    input_shape[2] + 2*k,
-                    input_shape[3] + 2*k,
-                    input_shape[4] + 2*k)
+                    input_shape[2] + 4*k,
+                    input_shape[3] + 4*k,
+                    input_shape[4] + 4*k)
     R2_padded = output = T.zeros(output_shape, R2.dtype)
-    R2_padded = T.set_subtensor(R2_padded[:,:,k:-k, k:-k, k:-k], R2)
+    R2_padded = T.set_subtensor(R2_padded[:,:,2*k:-2*k, 2*k:-2*k, 2*k:-2*k], R2)
     R2_padded = R2_padded.dimshuffle(0, 4, 1, 2, 3)
+    R3 = conv3d(R2_padded, G_kernel, border_mode="valid")
     R3 = conv3d(R2_padded, G_kernel, border_mode="valid")
     R3 = R3.dimshuffle(0, 2, 3, 4, 1)
     #R3 = theano.printing.Print('R3')(R3)
     ### Get subtensor so as to achieve 'same' border mode
-    R4 = R3 #R3[:, :, k:-k, k:-k, k:-k]
+    #R4 = R3 #R3[:, :, k:-k, k:-k, k:-k]
     #R4 = theano.printing.Print('R4')(R4)
     ### Combine blurred network output with visible surface occupancy grid through some sort of union operation
     #R5 = R4 + 0*MM2 
     #R5 = R4 + MM2 - R4 * MM2
-    R5 = T.maximum(R4, MM2)
+    #R5 = T.maximum(R4, MM2)
     upscale_blur_and_combine_fn = theano.function(
         inputs=[input_1, input_2],
-        outputs=R5,
+        outputs=R3,
     )
     return upscale_blur_and_combine_fn

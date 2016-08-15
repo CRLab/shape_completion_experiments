@@ -2,15 +2,15 @@ import os
 from multiprocessing import Pool
 from multiprocessing import Process, Queue
 import h5py
-from datasets.ycb_reconstruction_dataset import YcbDataset, \
+#from datasets.ycb_reconstruction_dataset import YcbDataset, \
+#    build_training_example_scaled
+
+from datasets.asymetric_reconstruction_dataset import AsymetricDataset,\
     build_training_example_scaled
 
 string_dtype = h5py.special_dtype(vlen=bytes)
 
-PATCH_SIZE = 30
-
-
-# OUT_FILE_PATH = "rubbermaid_ice_guard_pitcher_blue.h5"
+PATCH_SIZE = 40
 
 
 def reader(index_queue, examples_queue):
@@ -33,62 +33,24 @@ def reader(index_queue, examples_queue):
                     index, x, y, single_view_pointcloud_filepath,
                     pose_filepath, model_filepath))
             except:
-                examples_queue.put((index, None, None,
-                                    single_view_pointcloud_filepath,
-                                    pose_filepath, model_filepath))
+              examples_queue.put((index, None, None,
+                                  single_view_pointcloud_filepath,
+                                  pose_filepath, model_filepath))
 
 
-
-if __name__ == '__main__':
-    model_names = ['black_and_decker_lithium_drill_driver',
-                   'block_of_wood_6in',
-                   'block_of_wood_12in',
-                   'blue_wood_block_1inx1in',
-                   'brine_mini_soccer_ball',
-                   'campbells_condensed_tomato_soup',
-                   'champion_sports_official_softball',
-                   'cheerios_14oz',
-                   'cheeze-it_388g',
-                   'clorox_disinfecting_wipes_35',
-                   'comet_lemon_fresh_bleach',
-                   'domino_sugar_1lb',
-                   'frenchs_classic_yellow_mustard_14oz',
-                   'jell-o_chocolate_flavor_pudding',
-                   'jell-o_strawberry_gelatin_dessert',
-                   'large_black_spring_clamp',
-                   'master_chef_ground_coffee_297g',
-                   'medium_black_spring_clamp',
-                   'melissa_doug_farm_fresh_fruit_apple',
-                   'melissa_doug_farm_fresh_fruit_banana',
-                   'melissa_doug_farm_fresh_fruit_lemon',
-                   'melissa_doug_farm_fresh_fruit_orange',
-                   'melissa_doug_farm_fresh_fruit_pear',
-                   'melissa_doug_farm_fresh_fruit_strawberry',
-                   'morton_salt_shaker',
-                   'orange_wood_block_1inx1in',
-                   'penn_raquet_ball',
-                   'play_go_rainbow_stakin_cups_1_yellow',
-                   'play_go_rainbow_stakin_cups_2_orange',
-                   'play_go_rainbow_stakin_cups_3_red',
-                   'play_go_rainbow_stakin_cups_5_green',
-                   'pringles_original',
-                   'purple_wood_block_1inx1in',
-                   'red_metal_bowl_white_speckles',
-                   'red_metal_cup_white_speckles',
-                   'red_metal_plate_white_speckles',
-                   'rubbermaid_ice_guard_pitcher_blue',
-                   'soft_scrub_2lb_4oz',
-                   'spam_12oz',
-                   'sponge_with_textured_cover']
-    for model_name in model_names:
-        data_dir = '/srv/data/shape_completion_data/ycb/'
-        models_dir = data_dir + model_name + '/models/'
-        pc_dir = data_dir + model_name + '/pointclouds_remesh/'
-        h5_dir = data_dir + model_name + '/h5_rpy/'
+if __name__ == "__main__":
+    
+    data_dir = '/srv/data/shape_completion_data/asymetric/'
+    for model_name in os.listdir(data_dir):
+        
+        models_dir = data_dir + model_name + '/'
+        models_dir = '/srv/data/processed_mesh_models/asymetric/' + model_name
+        pc_dir = data_dir + model_name + '/pointclouds/'
+        h5_dir = data_dir + model_name + '/h5_40_v0/'
         if not os.path.exists(h5_dir):
             os.mkdir(h5_dir)
 
-        recon_dataset = YcbDataset(data_dir, model_name, patch_size=PATCH_SIZE)
+        recon_dataset = AsymetricDataset(data_dir, model_name, patch_size=PATCH_SIZE)
         num_examples = recon_dataset.get_num_examples()
 
         print("Number of examples: " + str(num_examples))
@@ -113,7 +75,7 @@ if __name__ == '__main__':
         examples_queue = Queue(maxsize=100)
 
         print("starting readers")
-        num_readers = 6
+        num_readers = 4
 
         for i in range(num_readers):
             reader_p = Process(target=reader,
@@ -150,4 +112,5 @@ if __name__ == '__main__':
             h5_dset['x'][index] = x
             h5_dset['y'][index] = y
             h5_dset.close()
+
 

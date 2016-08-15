@@ -3,7 +3,7 @@ import numpy as np
 from operator import mul
 from utils.reconstruction_utils import create_voxel_grid_around_point
 from utils.reconstruction_utils import map_pointclouds_to_camera_frame, \
-    build_training_example, build_training_example_scaled
+    build_training_example_scaled
 
 
 class ReconstructionIterator(collections.Iterator):

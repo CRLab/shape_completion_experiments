@@ -1,0 +1,115 @@
+import numpy as np
+import os
+import collections
+# import binvox_rw
+import visualization.visualize as viz
+# import tf_conversions
+# import PyKDL
+
+import h5py
+from operator import mul
+import math
+
+
+class ShrecHoldoutDataset():
+    def __init__(self,
+                 h5_dir,
+                 model_names):
+        self.dset = []
+        self.num_examples = []
+        self.patch_size = []
+        for i, model_name in enumerate(model_names):
+            self.dset.append(h5py.File(
+                h5_dir + model_name + '/' + model_name + '.h5', 'r'))
+            self.num_examples.append(self.dset[i]['x'].shape[0])
+            self.patch_size.append(self.dset[i]['x'].shape[1])
+
+    def get_num_examples(self):
+        return self.num_examples
+
+    def iterator(self,
+                 batch_size=None,
+                 num_batches=None,
+                 flatten_y=True):
+        return ShrecHoldoutIterator(self,
+                                         batch_size=batch_size,
+                                         num_batches=num_batches,
+                                         flatten_y=flatten_y)
+
+
+class ShrecHoldoutIterator(collections.Iterator):
+    def __init__(self,
+                 dataset,
+                 batch_size,
+                 num_batches,
+                 iterator_post_processors=[],
+                 flatten_y=True):
+
+        self.dataset = dataset
+
+        self.batch_size = batch_size
+        self.num_batches = num_batches
+        self.flatten_y = flatten_y
+
+        self.iterator_post_processors = iterator_post_processors
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+
+        patch_size = self.dataset.patch_size[
+            0]  # Since patch_size is the same for all the models
+
+        batch_x = np.zeros(
+            (self.batch_size, patch_size, patch_size, patch_size, 1),
+            dtype=np.float32)
+        batch_y = np.zeros(
+            (self.batch_size),
+            dtype=np.int8)
+
+        for i in range(self.batch_size):
+            model_no = np.random.random_integers(0, len(self.dataset.dset) - 1)
+            index = np.random.random_integers(
+                0, self.dataset.dset[model_no]['x'].shape[0] - 1)
+
+            x = self.dataset.dset[model_no]['x'][index]
+            #y = self.dataset.dset[model_no]['y'][index]
+
+            # viz.visualize_3d(x)
+            # viz.visualize_3d(y)
+
+            #ALL SHREC MODELS CLASSIFIED AS 0
+            batch_x[i, :, :, :, :] = x
+
+        # make batch B2C01 rather than B012C
+        batch_x = batch_x.transpose(0, 3, 4, 1, 2)
+        return batch_x, batch_y
+
+    def batch_size(self):
+        return self.batch_size
+
+    def num_batches(self):
+        return self.num_batches
+
+    def num_examples(self):
+        return self.dataset.get_num_examples()
+
+
+def main():
+    h5_dir = '/srv/data/shape_completion_data/shrec/test_h5/'
+    model_name = ['D00152', 'D00966', 'D00748', 'D00562', 'D00512',
+                  'D00208', 'D00265', 'D01063', 'D00362', 'D00199',
+                  'D00842', 'D00857', 'D00551', 'D00218', 'D00800',
+                  'D00045', 'D00051', 'D00308', 'D01171', 'D00017',
+                  'D00786', 'D00770', 'D00849', 'D01106', 'D00470',
+                  'D00220', 'D00712', 'D01047', 'D00681', 'D00400',
+                  'D00662', 'D00928', 'D00940', 'D00313', 'D00502']
+    dataset = ShrecHoldoutDataset(h5_dir, model_name)
+    it = dataset.iterator(batch_size=5,
+                          num_batches=100,
+                          flatten_y=True)
+    it.next()
+
+if __name__ == "__main__":
+    main()

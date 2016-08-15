@@ -7,10 +7,7 @@ from datasets.ycb_reconstruction_dataset import YcbDataset, \
 
 string_dtype = h5py.special_dtype(vlen=bytes)
 
-PATCH_SIZE = 30
-
-
-# OUT_FILE_PATH = "rubbermaid_ice_guard_pitcher_blue.h5"
+PATCH_SIZE = 40
 
 
 def reader(index_queue, examples_queue):
@@ -33,13 +30,12 @@ def reader(index_queue, examples_queue):
                     index, x, y, single_view_pointcloud_filepath,
                     pose_filepath, model_filepath))
             except:
-                examples_queue.put((index, None, None,
-                                    single_view_pointcloud_filepath,
-                                    pose_filepath, model_filepath))
+              examples_queue.put((index, None, None,
+                                  single_view_pointcloud_filepath,
+                                  pose_filepath, model_filepath))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     model_names = ['black_and_decker_lithium_drill_driver',
                    'block_of_wood_6in',
                    'block_of_wood_12in',
@@ -84,7 +80,7 @@ if __name__ == '__main__':
         data_dir = '/srv/data/shape_completion_data/ycb/'
         models_dir = data_dir + model_name + '/models/'
         pc_dir = data_dir + model_name + '/pointclouds_remesh/'
-        h5_dir = data_dir + model_name + '/h5_rpy/'
+        h5_dir = data_dir + model_name + '/h5_remesh_40_recentered/'
         if not os.path.exists(h5_dir):
             os.mkdir(h5_dir)
 
@@ -150,4 +146,5 @@ if __name__ == '__main__':
             h5_dset['x'][index] = x
             h5_dset['y'][index] = y
             h5_dset.close()
+
 

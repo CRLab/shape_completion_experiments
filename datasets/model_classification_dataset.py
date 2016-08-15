@@ -4,7 +4,7 @@ import h5py
 from operator import mul
 
 
-class YcbShrecReconstructionDataset:
+class YcbShrecDiscriminationDataset:
     def __init__(self,
                  ycb_models_dir,
                  ycb_model_names,
@@ -52,13 +52,13 @@ class YcbShrecReconstructionDataset:
                  batch_size=None,
                  num_batches=None,
                  flatten_y=True):
-        return YcbShrecReconstructionIterator(self,
+        return YcbShrecDiscriminationIterator(self,
                                          batch_size=batch_size,
                                          num_batches=num_batches,
                                          flatten_y=flatten_y)
 
 
-class YcbShrecReconstructionIterator(collections.Iterator):
+class YcbShrecDiscriminationIterator(collections.Iterator):
     def __init__(self,
                  dataset,
                  batch_size,
@@ -89,6 +89,7 @@ class YcbShrecReconstructionIterator(collections.Iterator):
         batch_y = np.zeros(
             (self.batch_size, patch_size, patch_size, patch_size, 1),
             dtype=np.float32)
+        discriminator_batch_y = np.zeros((self.batch_size), dtype=np.int8)
 
         num_ycb_models = len(self.dataset.ycb_dset)
         num_shrec_models = len(self.dataset.shrec_dset)
@@ -107,7 +108,9 @@ class YcbShrecReconstructionIterator(collections.Iterator):
                     index = np.random.choice(self.dataset.ycb_test_set[model_no])
 
                 x = self.dataset.ycb_dset[model_no]['x'][index]
-                y = self.dataset.ycb_dset[model_no]['y'][index]
+                #y = self.dataset.ycb_dset[model_no]['y'][index]
+                #all ycb models are class 1
+                y = 1
             else:
                 model_no = np.random.random_integers(0, num_shrec_models - 1)
                 if train:
@@ -116,28 +119,31 @@ class YcbShrecReconstructionIterator(collections.Iterator):
                     index = np.random.choice(self.dataset.shrec_test_set[model_no])
 
                 x = self.dataset.shrec_dset[model_no]['x'][index]
-                y = self.dataset.shrec_dset[model_no]['y'][index]
+                #y = self.dataset.shrec_dset[model_no]['y'][index]
 
+                #all shrec models are class 0
+                y=0
             # viz.visualize_3d(x)
             # viz.visualize_3d(y)
             # viz.visualize_pointcloud(pc2_out[0:3, :].T)
 
-            batch_y[i, :, :, :, :] = y
+            #batch_y[i, :, :, :, :] = y
             batch_x[i, :, :, :, :] = x
+            discriminator_batch_y[i]=y
 
         # make batch B2C01 rather than B012C
         batch_x = batch_x.transpose(0, 3, 4, 1, 2)
-        batch_y = batch_y.transpose(0, 3, 4, 1, 2)
-
+        #batch_y = batch_y.transpose(0, 3, 4, 1, 2)
+        """
         if self.flatten_y:
-            batch_y = batch_y.reshape(batch_y.shape[0],
+           batch_y = batch_y.reshape(batch_y.shape[0],
                                       reduce(mul, batch_y.shape[1:]))
 
         # apply post processors to the patches
         for post_processor in self.iterator_post_processors:
             batch_x, batch_y = post_processor.apply(batch_x, batch_y)
-
-        return batch_x, batch_y
+        """
+        return batch_x, discriminator_batch_y
 
     def batch_size(self):
         return self.batch_size

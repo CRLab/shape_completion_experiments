@@ -12,17 +12,17 @@ from utils.reconstruction_utils import map_pointclouds_to_camera_frame, \
 from operator import mul
 
 
-class YcbDataset():
+class AsymetricDataset():
     def __init__(self,
                  data_dir,
                  model_name,
                  patch_size):
 
-        self.models_dir = data_dir + '/' + model_name + '/models/'
+        self.models_dir = data_dir + '/' + model_name + '/'
         self.pc_dir = data_dir + '/' + model_name + '/pointclouds/'
         self.model_name = model_name
         self.patch_size = patch_size
-        self.model_fullfilename = self.models_dir + model_name + '.binvox'
+        self.model_fullfilename = self.models_dir + model_name + '_scaled.binvox'
         filenames = [d for d in os.listdir(self.pc_dir) if
                      not os.path.isdir(self.pc_dir + d)]
 
@@ -30,7 +30,7 @@ class YcbDataset():
         for file_name in filenames:
             if "_pc.npy" in file_name:
                 pointcloud_file = self.pc_dir + file_name
-                pose_file = self.pc_dir + file_name.replace('pc', 'pose')
+                pose_file = self.pc_dir + file_name.replace('pc', 'model_pose')
                 self.examples.append(
                     (pointcloud_file, pose_file, self.model_fullfilename))
 
@@ -41,13 +41,13 @@ class YcbDataset():
                  batch_size=None,
                  num_batches=None,
                  flatten_y=True):
-        return YcbDatasetIterator(self,
+        return AsymetricDatasetIterator(self,
                                   batch_size=batch_size,
                                   num_batches=num_batches,
                                   flatten_y=flatten_y)
 
 
-class YcbDatasetIterator(collections.Iterator):
+class AsymetricDatasetIterator(collections.Iterator):
     def __init__(self,
                  dataset,
                  batch_size,
@@ -122,10 +122,14 @@ class YcbDatasetIterator(collections.Iterator):
 
 
 def main():
-    dataset = YcbDataset("/srv/data/shape_completion_data/ycb/",
-                         "wescott_orange_grey_scissors", 30)
-    it = dataset.iterator(5)
-    it.next()
+    dataset = AsymetricDataset("/srv/data/shape_completion_data/asymetric",
+                         "m87", 40)
+    it = dataset.iterator(5,flatten_y = False)
+    x,y = it.next()
+    import IPython
+    IPython.embed()
+
 
 if __name__ == "__main__":
     main()
+

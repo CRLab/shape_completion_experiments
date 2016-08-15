@@ -4,12 +4,12 @@ import h5py
 from operator import mul
 
 
-class YcbReconstructionDataset:
+class AsymetricReconstructionDataset:
     def __init__(self,
                  models_dir,
                  training_model_names,
                  holdout_model_names,
-                 mesh_folder='/h5_remesh/'):
+                 mesh_folder='/h5_40_v0/'):
 
         self.training_dset = []
         self.holdout_model_dset = []
@@ -165,3 +165,11 @@ class HoldoutModelIterator(DataIterator):
 
     def get_next_view_idx(self, model_idx):
         return np.random.choice(self.dataset.holdout_model_set[model_idx])
+
+if __name__ == "__main__":
+    models_dir = "/srv/data/shape_completion_data/asymetric/"
+    training_model_names = ['m87']
+    holdout_model_names = ['M000074']
+    dset = AsymetricReconstructionDataset(models_dir,training_model_names=training_model_names,holdout_model_names=holdout_model_names)
+    import IPython
+    IPython.embed()
