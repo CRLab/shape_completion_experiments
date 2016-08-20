@@ -76,6 +76,7 @@ if __name__ == "__main__":
                    'soft_scrub_2lb_4oz',
                    'spam_12oz',
                    'sponge_with_textured_cover']
+
     for model_name in model_names:
         data_dir = '/srv/data/shape_completion_data/ycb/'
         models_dir = data_dir + model_name + '/models/'

@@ -183,7 +183,7 @@ def align_gt_and_partial(gt_file_path,
     partial_pcd_pc_of = pcl.PointCloud(np.array(partial_np_pc_of.transpose()[:, 0:3], np.float32))
     gt_pcd_pc_of = pcl.PointCloud(np.array(gt_np_pc[:, 0:3], np.float32))
     
-    result_folder = "/home/jvarley/shape_completion_data_aligned_all_ycb/" + model_name + "/" + partial_name + "/"
+    result_folder = results_dir + model_name + "/" + partial_name + "/"
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
 
@@ -204,7 +204,7 @@ def align_gt_and_partial(gt_file_path,
         pcl.save(gt_pcd_pc_of, gt_filepath_of)
 
     gt_mesh_filepath = result_folder + "c_gt.ply"
-    if not os.path.exists(gt_mesh_filepath):
+    if True: #not os.path.exists(gt_mesh_filepath):
         gt_mesh.text = True
         gt_mesh.write(open(gt_mesh_filepath, "w"))
 
@@ -228,7 +228,8 @@ if __name__ == "__main__":
 
     rospy.init_node('gen_smoothing_data')
 
-    models_dir = "/srv/data/shape_completion_data/ycb/"
+    models_dir = "/srv/data/shape_completion_data/asymetric/"
+    results_dir = "/home/jvarley/asymetric_completions_aligned/"
     models = os.listdir(models_dir)
 
     for model_name in models:
@@ -236,22 +237,22 @@ if __name__ == "__main__":
         #for model_name in ["rubbermaid_ice_guard_pitcher_blue"]:
         view_per_model_count = 0
 
-        gt = models_dir + model_name + "/meshes/" + model_name + ".pcd"
-        gt_mesh = models_dir + model_name + "/meshes/" + model_name + ".ply"
+        gt = models_dir + model_name + "/meshes/" + model_name + "_scaled.pcd"
+        gt_mesh = models_dir + model_name + "/meshes/" + model_name + "_scaled.ply"
         
         if os.path.exists(gt):
-            pose_dir = "/srv/data/shape_completion_data/ycb/" + model_name + "/pointclouds/"
+            pose_dir = models_dir + model_name + "/pointclouds/"
             #pose_dir = "/home/jvarley/shape_completion_data2/" + model_name + "/"
             for datafile in os.listdir(pose_dir):
                 #if "model_pose.npy" in datafile:
-                if "pose.npy" in datafile:
+                if "model_pose.npy" in datafile:
                     view_per_model_count += 1
                     if view_per_model_count > 10:
                         view_per_model_count = 0
                         break
                     print "working on: "+ pose_dir + datafile
                     pose = pose_dir + datafile
-                    pc = pose_dir + datafile.replace("pose.npy", "pc.npy")
+                    pc = pose_dir + datafile.replace("model_pose.npy", "pc.npy")
                     partial_name = datafile.strip("_pose.npy")
                     align_gt_and_partial(gt,gt_mesh, pose, pc, model_name, partial_name)
                     

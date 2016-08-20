@@ -60,8 +60,12 @@ def main():
     #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m01_d28_h22_m48/'
     #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m02_d01_h14_m16/'
     #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m02_d03_h17_m02/'
-    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m07_d26_h18_m46/'
-
+    #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m07_d26_h18_m46/'
+    
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d15_h03_m59/'
+    #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d14_h09_m35/'
+    #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d14_h18_m50/'
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d19_h12_m00/'
     COMPARING_RUNS = False
     filter_data = True
 
