@@ -34,6 +34,10 @@ def get_voxel_resolution(pc, patch_size):
                   (max_y - min_y),
                   (max_z - min_z))
 
+    print max_dim
+    print PERCENT_PATCH_SIZE
+    print patch_size
+
     voxel_resolution = (1.0*max_dim) / (PERCENT_PATCH_SIZE * patch_size)
     return voxel_resolution
 
@@ -474,3 +478,11 @@ def compile_theano_3d_upscale_blur_and_combine_function(upsampling_factor, blur_
         outputs=R3,
     )
     return upscale_blur_and_combine_fn
+
+def numpy_jaccard_similarity(a, b):
+    '''
+    Returns the number of pixels of the intersection of two voxel grids divided
+    by the number of pixels in the union.
+    The inputs are expected to be numpy 5D ndarrays in BZCXY format.
+    '''
+    return np.mean(np.sum(a * b, axis=1) / np.sum((a + b) - a * b, axis=1))

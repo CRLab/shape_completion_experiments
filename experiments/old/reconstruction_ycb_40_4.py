@@ -347,7 +347,6 @@ def get_model():
 
     optimizer = RMSprop(lr=.0001)
     model.compile(loss='cross_entropy_error', optimizer=optimizer)
-
     return model
 
 

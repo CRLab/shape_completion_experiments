@@ -66,6 +66,11 @@ def main():
     #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d14_h09_m35/'
     #results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d14_h18_m50/'
     results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d19_h12_m00/'
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d20_h23_m55/'
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d21_h23_m30/'
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d24_h18_m45/'
+
+
     COMPARING_RUNS = False
     filter_data = True
 

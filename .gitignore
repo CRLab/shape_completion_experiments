@@ -5,3 +5,4 @@
 results/*
 experiments/results/*
 local/*
+*.yaml

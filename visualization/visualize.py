@@ -3,7 +3,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 
-def visualize_3d(data, title=None, save_file=None):
+def visualize_3d(data_in, title=None, save_file=None):
+    data = data_in[:]
     data[data < 0.5] = 0
 
     non_zero_indices = data.nonzero()
