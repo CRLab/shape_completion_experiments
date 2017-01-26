@@ -6,7 +6,7 @@ if not os.environ.has_key('DISPLAY'):
     import matplotlib 
     matplotlib.use('Agg')
 
-from datasets import yaml_dataset
+from datasets import dataset
 
 
 # from keras.models import Sequential
@@ -62,19 +62,32 @@ def get_model(model_python_module):
 
 
 def get_dataset(dataset_filepath):
-    return yaml_dataset.YamlDataset(dataset_filepath)
+    return dataset.Dataset(dataset_filepath)
+
+def log_jaccards(model, iterator, error_log_file, jaccard_log_file):
+    X_batch, Y_batch = iterator.next()
+    error = model.test(X_batch, Y_batch)
+    prediction = model._predict(X_batch)
+    binarized_prediction = np.array(prediction > 0.5, dtype=int)
+    jaccard_similarity = numpy_jaccard_similarity(Y_batch,
+                                                  binarized_prediction)
+    print('error: ' + str(error))
+    print('jaccard_similarity: ' + str(jaccard_similarity))
+    with open(error_log_file, "a") as error_file:
+        error_file.write(str(error) + '\n')
+        error_file.close()
+    with open(jaccard_log_file, "a") as jaccard_file:
+        jaccard_file.write(str(jaccard_similarity) + '\n')
+        jaccard_file.close()
+    return error, jaccard_similarity
 
 
 def train(model, dataset):
-    PR = cProfile.Profile()
 
     lowest_error = 1000000
     highest_jaccard = 0
 
-    for e in range(args.NB_EPOCH):
-        print 'Epoch: ' + str(e)
-        PR.enable()
-
+    for i in range(10000):
         train_iterator = dataset.train_iterator(batch_size=args.BATCH_SIZE,
                                                 flatten_y=True)
 
@@ -84,91 +97,56 @@ def train(model, dataset):
         holdout_model_iterator = dataset.holdout_model_iterator(batch_size=args.BATCH_SIZE,
                                                                 flatten_y=True)
 
+        print i 
+
+    for e in range(args.NB_EPOCH):
+        print 'Epoch: ' + str(e)
+
         for b in range(args.NB_TRAIN_BATCHES):
             X_batch, Y_batch = train_iterator.next()
             loss = model.train(X_batch, Y_batch)
             print 'loss: ' + str(loss)
             with open(args.LOSS_FILE, "a") as loss_file:
                 loss_file.write(str(loss) + '\n')
+                loss_file.close()
 
-        average_error = 0
+        average_train_error = 0
         average_holdout_model_jaccard_similarity = 0
         for b in range(args.NB_TEST_BATCHES):
 
-            X_batch, Y_batch = holdout_view_iterator.next()
-            error = model.test(X_batch, Y_batch)
-            prediction = model._predict(X_batch)
-            binarized_prediction = np.array(prediction > 0.5, dtype=int)
-            train_jaccard_similarity = numpy_jaccard_similarity(Y_batch,
-                                                          binarized_prediction)
-            print('error: ' + str(error))
-            print('jaccard_similarity: ' + str(train_jaccard_similarity))
-            with open(args.ERROR_TRAINED_VIEWS, "a") as error_file:
-                error_file.write(str(error) + '\n')
-            with open(args.JACCARD_TRAINED_VIEWS, "a") as jaccard_file:
-                jaccard_file.write(str(train_jaccard_similarity) + '\n')
+            train_error, train_jaccard_similarity = log_jaccards(model,
+                 train_iterator, args.ERROR_TRAINED_VIEWS, args.JACCARD_TRAINED_VIEWS)
 
-            X_batch, Y_batch = holdout_view_iterator.next()
-            error = model.test(X_batch, Y_batch)
-            prediction = model._predict(X_batch)
-            binarized_prediction = np.array(prediction > 0.5, dtype=int)
-            holdout_view_jaccard_similarity = numpy_jaccard_similarity(Y_batch,
-                                                          binarized_prediction)
-            print('error: ' + str(error))
-            print('jaccard_similarity: ' + str(holdout_view_jaccard_similarity))
-            with open(args.ERROR_HOLDOUT_VIEWS, "a") as error_file:
-                error_file.write(str(error) + '\n')
-            with open(args.JACCARD_HOLDOUT_VIEWS, "a") as jaccard_file:
-                jaccard_file.write(str(holdout_view_jaccard_similarity) + '\n')
+            holdout_view_error, holdout_view_jaccard_similarity = log_jaccards(model,
+                 holdout_view_iterator, args.ERROR_HOLDOUT_VIEWS, args.JACCARD_HOLDOUT_VIEWS)
 
-            average_error += error
+            holdout_model_error, holdout_model_jaccard_similarity = log_jaccards(model,
+                 holdout_model_iterator, args.ERROR_HOLDOUT_MODELS, args.JACCARD_HOLDOUT_MODELS)
 
-            X_batch, Y_batch = holdout_model_iterator.next()
-            error = model.test(X_batch, Y_batch)
-            prediction = model._predict(X_batch)
-            binarized_prediction = np.array(prediction > 0.5, dtype=int)
-            holdout_model_jaccard_similarity = numpy_jaccard_similarity(Y_batch,
-                                                          binarized_prediction)
 
+            average_train_error += train_error
             average_holdout_model_jaccard_similarity += holdout_model_jaccard_similarity
 
-            print('error: ' + str(error))
-            print('jaccard_similarity: ' + str(holdout_model_jaccard_similarity))
-            with open(args.ERROR_HOLDOUT_MODELS, "a") as error_file:
-                error_file.write(str(error) + '\n')
-            with open(args.JACCARD_HOLDOUT_MODELS, "a") as jaccard_file:
-                jaccard_file.write(str(holdout_model_jaccard_similarity) + '\n')
-
-        average_error /= args.NB_TEST_BATCHES
+        average_train_error /= args.NB_TEST_BATCHES
         average_holdout_model_jaccard_similarity /= args.NB_TEST_BATCHES
 
         if e > 10 and e % 10 == 0:
             model.save_weights(args.CURRENT_WEIGHT_FILE)
 
-        if e > 10 and e % 10 ==0 and lowest_error >= average_error:
-            lowest_error = average_error
+        if e > 10 and e % 10 ==0 and lowest_error >= average_train_error:
+            lowest_error = average_train_error
             print('new lowest error ' + str(lowest_error))
             model.save_weights(args.BEST_WEIGHT_FILE)
 
         if e > 10 and e % 10 ==0 and highest_jaccard <= average_holdout_model_jaccard_similarity:
             highest_jaccard = average_holdout_model_jaccard_similarity
             print('new highest highest_jaccard ' + str(highest_jaccard))
-            model.save_weights(args.BEST_WEIGHT_FILE_JACCARD)
+            model.save_weights(args.BEST_WEIGHT_FILE_HOLDOUT_MODELS_JACCARD)
 
         if e % 10 == 0:
             test(model, dataset, e)
 
-        PR.disable()
-        s = StringIO.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(PR, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        stats_str = s.getvalue()
-        f = open(args.PROFILE_FILE, 'w')
-        f.write(stats_str)
-        f.close()
-
-
+      
 def test(model, dataset, epoch=-1):
 
     train_iterator = dataset.train_iterator(batch_size=args.BATCH_SIZE,
@@ -275,3 +253,6 @@ if __name__ == "__main__":
     train(model, dataset)
     print('Step 5/5 -- Testing Model')
     test(model, dataset, -1)
+    
+    import IPython
+    IPython.embed()

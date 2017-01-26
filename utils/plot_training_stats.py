@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
+COMPARING_RUNS = False
+PLOT_ALL_TOGETHER = True
+filter_data = True
 
 def plot_stat(stat_files, title, save_file, filter_data=False):
     plt.title(title, fontsize=22)
@@ -22,8 +25,9 @@ def plot_stat(stat_files, title, save_file, filter_data=False):
         plt.plot(x, stat, color, label=label, linewidth=2)
     plt.ylim((0,1))
     plt.legend(loc=4, fontsize=18, labelspacing=0.2)
-    plt.savefig(save_file)
-    plt.show()
+    if not PLOT_ALL_TOGETHER:
+        plt.savefig(save_file)
+        plt.show()
     print ''
 
 
@@ -68,11 +72,16 @@ def main():
     results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d19_h12_m00/'
     results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d20_h23_m55/'
     results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d21_h23_m30/'
+    
+    #FROM ICRA PAPER
     results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y16_m08_d24_h18_m45/'
 
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y17_m01_d23_h15_m42/'
 
-    COMPARING_RUNS = False
-    filter_data = True
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y17_m01_d23_h16_m11/'
+    results_dir = '/home/jvarley/shape_completion/train/shape_completion_experiments/experiments/results/y17_m01_d25_h15_m04/'
+    
+
 
     jaccard_trained_views = []
     jaccard_holdout_views = []
@@ -104,6 +113,8 @@ def main():
         plot_stat(jaccard_holdout_views, 'Holdout Views', results_dir + 'jaccard_err_holdout_views.pdf')
         plot_stat(jaccard_holdout_models, 'Holdout Models', results_dir + 'jaccard_err_holdout_models.pdf')
 
+    if PLOT_ALL_TOGETHER:
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -34,6 +34,23 @@ class YamlDataset:
             data_key="holdout_models_holdout_views",
             flatten_y=flatten_y)
 
+    def verify_dataset(self):
+        key_pairs = [("holdout_models_holdout_views","train_models_train_views"),
+                    ("holdout_models_holdout_views","train_models_holdout_views"),
+                    ("train_models_train_views","train_models_holdout_views")]
+
+        for (k1, k2) in key_pairs:
+            print "checking: " + str(k1) + " vs " + str(k2)
+            for i,(x0, y0) in enumerate(self._data[k1]):
+                for (x1, y1) in self._data[k2] :
+                    if x0 == x1:
+                        print "Failed: " + str(k1) + " vs " + str(k2) + ": " + str(i)
+                        print x0
+                        assert False
+
+        print "finished: all good"
+
+
 
 class DataIterator():
     def __init__(self,

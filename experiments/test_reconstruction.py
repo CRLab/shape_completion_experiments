@@ -66,17 +66,17 @@ def test(model,
 
     output_vox = output > 0.5
 
-    """
-    This is the voxel grid in the camera frame of reference.
+    
+    # This is the voxel grid in the camera frame of reference.
     vox = binvox_rw.Voxels(output > 0.5,
                (args.PATCH_SIZE, args.PATCH_SIZE, args.PATCH_SIZE),
-               (offset[0], offset[1], offset[2]-1),
+               (offset[0], offset[1], offset[2]),
                voxel_resolution * args.PATCH_SIZE,
                "xyz")
-    """
+    
 
 
-
+    '''
     #go from voxel grid back to list of points. 
     #4xn
     completion = np.zeros((4, len(output_vox.nonzero()[0])))
@@ -110,7 +110,7 @@ def test(model,
                    (offset[0], offset[1], offset[2]),
                    voxel_resolution * args.PATCH_SIZE,
                    "xyz")
-
+    '''
 
     #if not os.path.exists(completion_filepath):
     binvox_rw.write(vox, open(completion_filepath, 'w'))
@@ -135,7 +135,10 @@ if __name__ == "__main__":
             model_pose_filepath = args.INPUT_DATA_DIR + args.INPUT_DATASET + model_name + "/pointclouds/_" + view_name + "_model_pose.npy"
             gt_center_to_upright_filepath = args.INPUT_DATA_DIR + args.INPUT_DATASET + model_name + "/meshes/gt_center_to_upright.npy"
             
-            completion_filepath = args.TEST_OUTPUT_DIR + model_name + "/" + view_name + "/completion_of.binvox"
+            completion_filepath = args.TEST_OUTPUT_DIR + model_name + "/" + view_name + "/completion_cf.binvox"
 
             print completion_filepath
-            test(model,model_pose_filepath, partial_view_filepath, completion_filepath, gt_center_to_upright_filepath)
+            try:
+                test(model,model_pose_filepath, partial_view_filepath, completion_filepath, gt_center_to_upright_filepath)
+            except Exception as e:
+                print e
