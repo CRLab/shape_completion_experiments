@@ -1,0 +1,14 @@
+0, black_and_decker_lithium_drill_driver
+1, brine_mini_soccer_ball
+2, campbells_condensed_tomato_soup
+3, clorox_disinfecting_wipes_35
+4, comet_lemon_fresh_bleach
+5, domino_sugar_1lb
+6, frenchs_classic_yellow_mustard_14oz
+7, melissa_doug_farm_fresh_fruit_lemon
+8, morton_salt_shaker
+9, play_go_rainbow_stakin_cups_1_yellow
+10, pringles_original
+11, rubbermaid_ice_guard_pitcher_blue
+12, soft_scrub_2lb_4oz
+13, sponge_with_textured_cover

@@ -1,0 +1,15 @@
+0, banana_poisson_005
+1, camera_poisson_014
+2, trash_can_poisson_021
+3, flashlight_poisson_001
+4, jar_poisson_013
+5, box_poisson_002
+6, book_poisson_002
+7, bowl_poisson_015
+8, can_poisson_020
+9, flashlight_poisson_005
+10, mushroom_poisson_013
+11, hammer_poisson_001
+12, soccer_ball_poisson_007
+13, mushroom_poisson_000
+14, banjo_poisson_002

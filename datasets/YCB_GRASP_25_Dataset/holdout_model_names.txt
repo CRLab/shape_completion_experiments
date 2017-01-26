@@ -1,0 +1,9 @@
+0, block_of_wood_6in
+1, cheerios_14oz
+2, melissa_doug_farm_fresh_fruit_banana
+3, play_go_rainbow_stakin_cups_2_orange
+4, flashlight_poisson_002
+5, notebook_poisson_035
+6, box_poisson_019
+7, spray_can_poisson_001
+8, cellphone_poisson_016
